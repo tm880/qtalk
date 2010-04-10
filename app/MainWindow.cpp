@@ -182,4 +182,8 @@ void MainWindow::unreadMessageCleared()
 
 void MainWindow::readAllUnreadMessage()
 {
+    foreach (QString bareJid, m_unreadMessageModel->bareJids()) {
+        openChatWindow(bareJid);
+    }
+    m_unreadMessageWindow->hide();
 }
