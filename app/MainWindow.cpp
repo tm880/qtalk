@@ -20,6 +20,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_unreadMessageWindow, SIGNAL(unreadListClicked(const QModelIndex&)),
             this, SLOT(getUnreadListClicked(const QModelIndex&)));
 
+    connect(m_unreadMessageModel, SIGNAL(messageCleared()),
+            this, SLOT(unreadMessageCleared()));
+    connect(m_unreadMessageWindow, SIGNAL(readAll()),
+            this, SLOT(readAllUnreadMessage()));
+
     m_client = new XmppClient(this);
     m_rosterModel = new RosterModel(this);
     
@@ -34,9 +39,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui.rosterTreeView->setModel(m_rosterModel);
 
     m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
-
-    // test
-    //m_unreadMessageModel->add(QXmppMessage());
 }
 
 MainWindow::~MainWindow()
@@ -62,7 +64,8 @@ void MainWindow::messageReceived(const QXmppMessage& message)
         if (!message.body().isEmpty()) {
             m_unreadMessageModel->add(message);
             m_rosterModel->messageUnread(bareJid, resource);
-            m_trayIcon->showMessage("get message", "some");
+
+            changeTrayIcon(newMessage);
         }
     }
 }
@@ -86,6 +89,7 @@ void MainWindow::rosterDoubleClicked(const QModelIndex &index)
 void MainWindow::getUnreadListClicked(const QModelIndex &index)
 {
     openChatWindow(m_unreadMessageModel->jidAt(index));
+
     if (m_unreadMessageModel->rowCount(QModelIndex()) == 0) {
         m_unreadMessageWindow->hide();
     }
@@ -142,7 +146,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::setupTrayIcon()
 {
     m_trayIcon = new QSystemTrayIcon(this);
-    m_trayIcon->setIcon(QIcon(":/image/tux.png"));
+    changeTrayIcon(online);
 
     m_quitAction = new QAction(tr("&Quit"), this);
     connect(m_quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
@@ -155,4 +159,27 @@ void MainWindow::setupTrayIcon()
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
 
     m_trayIcon->show();
+}
+
+void MainWindow::changeTrayIcon(TrayIconType type)
+{
+    switch (type){
+        case online:
+            m_trayIcon->setIcon(QIcon(":/image/user-online.png"));
+            break;
+        case newMessage:
+            m_trayIcon->setIcon(QIcon(":/image/mail-unread-new.png"));
+            break;
+        default:
+            break;
+    }
+}
+
+void MainWindow::unreadMessageCleared()
+{
+    changeTrayIcon(online);
+}
+
+void MainWindow::readAllUnreadMessage()
+{
 }
