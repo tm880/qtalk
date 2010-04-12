@@ -24,7 +24,6 @@ MainWindow::MainWindow(QWidget *parent)
     setupTrayIcon();
 
     m_rosterTreeView->setHeaderHidden(true);
-    //setCentralWidget(m_rosterTreeView);
     setCentralWidget(m_loginWidget);
 
     m_unreadMessageWindow->setModel(m_unreadMessageModel);
@@ -43,13 +42,16 @@ MainWindow::MainWindow(QWidget *parent)
             this, SLOT(rosterReceived()));
     connect(m_client, SIGNAL(messageReceived(const QXmppMessage&)),
             this, SLOT(messageReceived(const QXmppMessage&)));
+    connect(m_client, SIGNAL(disconnected()),
+            this, SLOT(clientDisconnect()));
+    connect(m_client, SIGNAL(error(QXmppClient::Error)),
+            this, SLOT(clientError(QXmppClient::Error)));
 
     connect(m_rosterTreeView, SIGNAL(doubleClicked(const QModelIndex &)),
             this, SLOT(rosterDoubleClicked(const QModelIndex &)));
 
     m_rosterTreeView->setModel(m_rosterModel);
 
-    //m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
 }
 
 MainWindow::~MainWindow()
@@ -58,7 +60,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::login()
 {
-    m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
+    m_loginWidget->lock();
+    m_loginWidget->showState("Login ...");
+    //m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
+    m_client->connectToServer(m_loginWidget->host(), m_loginWidget->jid(),
+                              m_loginWidget->password(), m_loginWidget->port());
 }
 
 void MainWindow::rosterReceived()
@@ -205,4 +211,20 @@ void MainWindow::readAllUnreadMessage()
         openChatWindow(bareJid);
     }
     m_unreadMessageWindow->hide();
+}
+
+void MainWindow::clientDisconnect()
+{
+    m_rosterTreeView->hide();
+    setCentralWidget(m_loginWidget);
+    m_loginWidget->showState("Disconnect");
+    m_loginWidget->show();
+}
+
+void MainWindow::clientError(QXmppClient::Error)
+{
+    m_rosterTreeView->hide();
+    setCentralWidget(m_loginWidget);
+    m_loginWidget->showState("Connect Error");
+    m_loginWidget->show();
 }
