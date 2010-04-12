@@ -6,17 +6,31 @@
 #include "QXmppMessage.h"
 #include "QXmppUtils.h"
 #include <QListView>
+#include <QTreeView>
 #include "UnreadMessageWindow.h"
 #include "UnreadMessageModel.h"
+#include "LoginWidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), m_client(new XmppClient(this)),
+    m_rosterModel(new RosterModel(this)),
+    m_rosterTreeView(new QTreeView(this)),
+    m_unreadMessageModel(new UnreadMessageModel(this)),
+    m_unreadMessageWindow(new UnreadMessageWindow(this)),
+    m_loginWidget(new LoginWidget(this))
 {
     ui.setupUi(this);
+    m_rosterTreeView->hide();
     setupTrayIcon();
-    m_unreadMessageWindow = new UnreadMessageWindow(this);
-    m_unreadMessageModel = new UnreadMessageModel(this);
+
+    m_rosterTreeView->setHeaderHidden(true);
+    //setCentralWidget(m_rosterTreeView);
+    setCentralWidget(m_loginWidget);
+
     m_unreadMessageWindow->setModel(m_unreadMessageModel);
+
+    connect(m_loginWidget, SIGNAL(login()),
+            this, SLOT(login()));
     connect(m_unreadMessageWindow, SIGNAL(unreadListClicked(const QModelIndex&)),
             this, SLOT(getUnreadListClicked(const QModelIndex&)));
 
@@ -25,28 +39,33 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_unreadMessageWindow, SIGNAL(readAll()),
             this, SLOT(readAllUnreadMessage()));
 
-    m_client = new XmppClient(this);
-    m_rosterModel = new RosterModel(this);
-    
     connect(&m_client->getRoster(), SIGNAL(rosterReceived()),
             this, SLOT(rosterReceived()));
     connect(m_client, SIGNAL(messageReceived(const QXmppMessage&)),
             this, SLOT(messageReceived(const QXmppMessage&)));
 
-    connect(ui.rosterTreeView, SIGNAL(doubleClicked(const QModelIndex &)),
+    connect(m_rosterTreeView, SIGNAL(doubleClicked(const QModelIndex &)),
             this, SLOT(rosterDoubleClicked(const QModelIndex &)));
 
-    ui.rosterTreeView->setModel(m_rosterModel);
+    m_rosterTreeView->setModel(m_rosterModel);
 
-    m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
+    //m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
 }
 
 MainWindow::~MainWindow()
 {
 }
 
+void MainWindow::login()
+{
+    m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
+}
+
 void MainWindow::rosterReceived()
 {
+    m_loginWidget->hide();
+    setCentralWidget(m_rosterTreeView);
+    m_rosterTreeView->show();
     m_rosterModel->setRoster(&m_client->getRoster());
 }
 
@@ -78,10 +97,10 @@ void MainWindow::rosterDoubleClicked(const QModelIndex &index)
         QString jid = m_rosterModel->jidAt(index);
         openChatWindow(jid);
     } else if (type == RosterModel::group) {
-        if (ui.rosterTreeView->isExpanded(index)) {
-            ui.rosterTreeView->collapse(index);
+        if (m_rosterTreeView->isExpanded(index)) {
+            m_rosterTreeView->collapse(index);
         } else {
-            ui.rosterTreeView->expand(index);
+            m_rosterTreeView->expand(index);
         }
     }
 }
