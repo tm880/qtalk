@@ -10,6 +10,7 @@
 #include "UnreadMessageWindow.h"
 #include "UnreadMessageModel.h"
 #include "LoginWidget.h"
+#include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), m_client(new XmppClient(this)),
@@ -20,6 +21,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_loginWidget(new LoginWidget(this))
 {
     ui.setupUi(this);
+    readSetting();
+
     m_rosterTreeView->hide();
     setupTrayIcon();
 
@@ -38,6 +41,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_unreadMessageWindow, SIGNAL(readAll()),
             this, SLOT(readAllUnreadMessage()));
 
+    connect(m_client, SIGNAL(connected()),
+            this, SLOT(clientConnected()));
     connect(&m_client->getRoster(), SIGNAL(rosterReceived()),
             this, SLOT(rosterReceived()));
     connect(m_client, SIGNAL(messageReceived(const QXmppMessage&)),
@@ -58,6 +63,47 @@ MainWindow::~MainWindow()
 {
 }
 
+void MainWindow::readSetting()
+{
+    readAccountSetting();
+}
+
+void MainWindow::readAccountSetting()
+{
+    QSettings setting;
+    setting.beginGroup("account");
+    m_loginWidget->setJid(setting.value("jid").toString());
+    if (setting.value("isStorePassword", false).toBool())
+        m_loginWidget->setPassword(setting.value("password").toString());
+    m_loginWidget->setHost(setting.value("host").toString());
+    m_loginWidget->setPort(setting.value("port", 5222).toInt());
+    m_loginWidget->setStorePassword(setting.value("isStorePassword", false).toBool());
+    m_loginWidget->setAutoLogin(setting.value("isAutoLogin", false).toBool());
+    setting.endGroup();
+}
+
+void MainWindow::writeSetting()
+{
+    writeAccountSetting();
+}
+
+void MainWindow::writeAccountSetting()
+{
+    QSettings setting;
+    setting.beginGroup("account");
+    setting.setValue("jid", m_loginWidget->jid());
+    if (m_loginWidget->isStorePassword())
+        setting.setValue("password", m_loginWidget->password());
+    else
+        setting.remove("password");
+    setting.setValue("host", m_loginWidget->host());
+    setting.setValue("port", m_loginWidget->port());
+    setting.setValue("isStorePassword", m_loginWidget->isStorePassword());
+    setting.setValue("isAutoLogin", m_loginWidget->isAutoLogin());
+    setting.endGroup();
+}
+
+
 void MainWindow::login()
 {
     m_loginWidget->lock();
@@ -65,6 +111,11 @@ void MainWindow::login()
     //m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
     m_client->connectToServer(m_loginWidget->host(), m_loginWidget->jid(),
                               m_loginWidget->password(), m_loginWidget->port());
+}
+
+void MainWindow::clientConnected()
+{
+    writeAccountSetting();
 }
 
 void MainWindow::rosterReceived()
@@ -158,13 +209,25 @@ void MainWindow::openChatWindow(const QString &jid)
 void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     if (reason == QSystemTrayIcon::Trigger) {
-        m_unreadMessageWindow->show();
+        if (m_unreadMessageModel->hasAnyUnread()) {
+            m_unreadMessageWindow->show();
+        } else {
+            if (isActiveWindow()) {
+                hide();
+            } else {
+                hide();
+                show();
+                raise();
+                activateWindow();
+            }
+        }
     }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     qDeleteAll(m_chatWindows);
+    writeSetting();
     event->accept();
 }
 
@@ -218,6 +281,7 @@ void MainWindow::clientDisconnect()
     m_rosterTreeView->hide();
     setCentralWidget(m_loginWidget);
     m_loginWidget->showState("Disconnect");
+    m_loginWidget->unlock();
     m_loginWidget->show();
 }
 
@@ -226,5 +290,6 @@ void MainWindow::clientError(QXmppClient::Error)
     m_rosterTreeView->hide();
     setCentralWidget(m_loginWidget);
     m_loginWidget->showState("Connect Error");
+    m_loginWidget->unlock();
     m_loginWidget->show();
 }
