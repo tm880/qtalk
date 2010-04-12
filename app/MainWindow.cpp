@@ -175,7 +175,7 @@ void MainWindow::openChatWindow(const QString &jid)
 {
     ChatWindow *chatWindow;
     if (m_chatWindows[jid] == NULL) {
-        chatWindow = new ChatWindow();
+        chatWindow = new ChatWindow(this);
         chatWindow->setJid(jid);
         chatWindow->setClient(m_client);
         chatWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -226,7 +226,7 @@ void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    qDeleteAll(m_chatWindows);
+    //qDeleteAll(m_chatWindows);
     writeSetting();
     event->accept();
 }
