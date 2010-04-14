@@ -11,7 +11,7 @@
 #include "UnreadMessageModel.h"
 #include "LoginWidget.h"
 #include <QSettings>
-#include "ConfigDialog.h"
+#include "PreferencesDialog.h"
 #include <QVBoxLayout>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_unreadMessageModel(new UnreadMessageModel(this)),
     m_unreadMessageWindow(new UnreadMessageWindow(this)),
     m_loginWidget(new LoginWidget(this)),
-    m_configDialog(new ConfigDialog(this))
+    m_preferencesDialog(new PreferencesDialog(this))
 {
     ui.setupUi(this);
     readSetting();
@@ -62,12 +62,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_rosterTreeView, SIGNAL(doubleClicked(const QModelIndex &)),
             this, SLOT(rosterDoubleClicked(const QModelIndex &)));
-    connect(ui.actionConfig, SIGNAL(triggered()),
-            this, SLOT(openConfigDialog()));
+    connect(ui.actionPreferences, SIGNAL(triggered()),
+            this, SLOT(openPreferencesDialog()));
     connect(ui.actionLogout, SIGNAL(triggered()),
             m_client, SLOT(disconnect()));
 
-    connect(m_configDialog, SIGNAL(accountSettingChanged()),
+    connect(m_preferencesDialog, SIGNAL(accountSettingChanged()),
             m_loginWidget, SLOT(readSetting()));
 
     m_rosterTreeView->setModel(m_rosterModel);
@@ -282,10 +282,10 @@ void MainWindow::clientError(QXmppClient::Error)
     changeToLogin();
 }
 
-void MainWindow::openConfigDialog()
+void MainWindow::openPreferencesDialog()
 {
-    m_configDialog->readSetting();
-    m_configDialog->show();
+    m_preferencesDialog->readSetting();
+    m_preferencesDialog->show();
 }
 
 void MainWindow::changeToLogin()
