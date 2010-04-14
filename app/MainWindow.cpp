@@ -11,23 +11,31 @@
 #include "UnreadMessageModel.h"
 #include "LoginWidget.h"
 #include <QSettings>
+#include "ConfigDialog.h"
+#include <QVBoxLayout>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), m_client(new XmppClient(this)),
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    m_centralLayout(new QVBoxLayout),
+    m_client(new XmppClient(this)),
     m_rosterModel(new RosterModel(this)),
     m_rosterTreeView(new QTreeView(this)),
     m_unreadMessageModel(new UnreadMessageModel(this)),
     m_unreadMessageWindow(new UnreadMessageWindow(this)),
-    m_loginWidget(new LoginWidget(this))
+    m_loginWidget(new LoginWidget(this)),
+    m_configDialog(new ConfigDialog(this))
 {
     ui.setupUi(this);
     readSetting();
 
-    m_rosterTreeView->hide();
+    //m_loginWidget->hide();
+    //m_rosterTreeView->hide();
     setupTrayIcon();
 
     m_rosterTreeView->setHeaderHidden(true);
-    setCentralWidget(m_loginWidget);
+    ui.widget->setLayout(m_centralLayout);
+    changeToLogin();
+    //setCentralWidget(m_loginWidget);
 
     m_unreadMessageWindow->setModel(m_unreadMessageModel);
 
@@ -54,6 +62,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(m_rosterTreeView, SIGNAL(doubleClicked(const QModelIndex &)),
             this, SLOT(rosterDoubleClicked(const QModelIndex &)));
+    connect(ui.actionConfig, SIGNAL(triggered()),
+            this, SLOT(openConfigDialog()));
+    connect(ui.actionLogout, SIGNAL(triggered()),
+            m_client, SLOT(disconnect()));
+
+    connect(m_configDialog, SIGNAL(accountSettingChanged()),
+            m_loginWidget, SLOT(readSetting()));
 
     m_rosterTreeView->setModel(m_rosterModel);
 
@@ -70,16 +85,7 @@ void MainWindow::readSetting()
 
 void MainWindow::readAccountSetting()
 {
-    QSettings setting;
-    setting.beginGroup("account");
-    m_loginWidget->setJid(setting.value("jid").toString());
-    if (setting.value("isStorePassword", false).toBool())
-        m_loginWidget->setPassword(setting.value("password").toString());
-    m_loginWidget->setHost(setting.value("host").toString());
-    m_loginWidget->setPort(setting.value("port", 5222).toInt());
-    m_loginWidget->setStorePassword(setting.value("isStorePassword", false).toBool());
-    m_loginWidget->setAutoLogin(setting.value("isAutoLogin", false).toBool());
-    setting.endGroup();
+    m_loginWidget->readSetting();
 }
 
 void MainWindow::writeSetting()
@@ -89,24 +95,15 @@ void MainWindow::writeSetting()
 
 void MainWindow::writeAccountSetting()
 {
-    QSettings setting;
-    setting.beginGroup("account");
-    setting.setValue("jid", m_loginWidget->jid());
-    if (m_loginWidget->isStorePassword())
-        setting.setValue("password", m_loginWidget->password());
-    else
-        setting.remove("password");
-    setting.setValue("host", m_loginWidget->host());
-    setting.setValue("port", m_loginWidget->port());
-    setting.setValue("isStorePassword", m_loginWidget->isStorePassword());
-    setting.setValue("isAutoLogin", m_loginWidget->isAutoLogin());
-    setting.endGroup();
+    // if loginwidget is visible, save its setting
+    if (m_loginWidget->isVisible())
+        m_loginWidget->writeSetting();
 }
-
 
 void MainWindow::login()
 {
     m_loginWidget->lock();
+    m_loginWidget->writeSetting();
     m_loginWidget->showState("Login ...");
     //m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
     m_client->connectToServer(m_loginWidget->host(), m_loginWidget->jid(),
@@ -115,15 +112,12 @@ void MainWindow::login()
 
 void MainWindow::clientConnected()
 {
-    writeAccountSetting();
+    m_loginWidget->showState("Connect successful");
 }
 
 void MainWindow::rosterReceived()
 {
-    m_loginWidget->hide();
-    setCentralWidget(m_rosterTreeView);
-    m_rosterTreeView->show();
-    m_rosterModel->setRoster(&m_client->getRoster());
+    changeToRoster();
 }
 
 void MainWindow::messageReceived(const QXmppMessage& message)
@@ -278,18 +272,37 @@ void MainWindow::readAllUnreadMessage()
 
 void MainWindow::clientDisconnect()
 {
-    m_rosterTreeView->hide();
-    setCentralWidget(m_loginWidget);
     m_loginWidget->showState("Disconnect");
-    m_loginWidget->unlock();
-    m_loginWidget->show();
+    changeToLogin();
 }
 
 void MainWindow::clientError(QXmppClient::Error)
 {
-    m_rosterTreeView->hide();
-    setCentralWidget(m_loginWidget);
     m_loginWidget->showState("Connect Error");
+    changeToLogin();
+}
+
+void MainWindow::openConfigDialog()
+{
+    m_configDialog->readSetting();
+    m_configDialog->show();
+}
+
+void MainWindow::changeToLogin()
+{
+    m_rosterTreeView->hide();
+    m_centralLayout->removeWidget(m_rosterTreeView);
+    m_centralLayout->addWidget(m_loginWidget);
     m_loginWidget->unlock();
+    m_loginWidget->readSetting();
     m_loginWidget->show();
+}
+
+void MainWindow::changeToRoster()
+{
+    m_loginWidget->hide();
+    m_centralLayout->removeWidget(m_loginWidget);
+    m_centralLayout->addWidget(m_rosterTreeView);
+    m_rosterModel->setRoster(&m_client->getRoster());
+    m_rosterTreeView->show();
 }
