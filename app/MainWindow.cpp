@@ -67,8 +67,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui.actionLogout, SIGNAL(triggered()),
             m_client, SLOT(disconnect()));
 
-    connect(m_preferencesDialog, SIGNAL(accountSettingChanged()),
-            m_loginWidget, SLOT(readSetting()));
+    connect(m_preferencesDialog, SIGNAL(applied()),
+            this, SLOT(preferencesApplied()));
 
     m_rosterTreeView->setModel(m_rosterModel);
 
@@ -85,25 +85,26 @@ void MainWindow::readSetting()
 
 void MainWindow::readAccountSetting()
 {
-    m_loginWidget->readSetting();
+    m_loginWidget->readData(&m_preferences);
 }
 
 void MainWindow::writeSetting()
 {
     writeAccountSetting();
+    m_preferences.save();
 }
 
 void MainWindow::writeAccountSetting()
 {
     // if loginwidget is visible, save its setting
     if (m_loginWidget->isVisible())
-        m_loginWidget->writeSetting();
+        m_loginWidget->writeData(&m_preferences);
 }
 
 void MainWindow::login()
 {
     m_loginWidget->lock();
-    m_loginWidget->writeSetting();
+    m_loginWidget->writeData(&m_preferences);
     m_loginWidget->showState("Login ...");
     //m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
     m_client->connectToServer(m_loginWidget->host(), m_loginWidget->jid(),
@@ -284,8 +285,17 @@ void MainWindow::clientError(QXmppClient::Error)
 
 void MainWindow::openPreferencesDialog()
 {
-    m_preferencesDialog->readSetting();
+    m_preferencesDialog->readData(&m_preferences);
     m_preferencesDialog->show();
+}
+
+void MainWindow::preferencesApplied()
+{
+    m_preferencesDialog->writeData(&m_preferences);
+    if (m_preferencesDialog->isAccountChanged())
+        m_loginWidget->readData(&m_preferences);
+
+    m_preferences.save();
 }
 
 void MainWindow::changeToLogin()
@@ -294,7 +304,7 @@ void MainWindow::changeToLogin()
     m_centralLayout->removeWidget(m_rosterTreeView);
     m_centralLayout->addWidget(m_loginWidget);
     m_loginWidget->unlock();
-    m_loginWidget->readSetting();
+    //m_loginWidget->readData(&m_preferences);
     m_loginWidget->show();
 }
 
