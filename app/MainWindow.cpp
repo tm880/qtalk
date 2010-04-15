@@ -33,6 +33,8 @@ MainWindow::MainWindow(QWidget *parent) :
     setupTrayIcon();
 
     m_rosterTreeView->setHeaderHidden(true);
+    m_rosterTreeView->setAnimated(true);
+    m_rosterTreeView->setExpandsOnDoubleClick(false);
     ui.widget->setLayout(m_centralLayout);
     changeToLogin();
     //setCentralWidget(m_loginWidget);
@@ -66,6 +68,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(openPreferencesDialog()));
     connect(ui.actionLogout, SIGNAL(triggered()),
             m_client, SLOT(disconnect()));
+    connect(ui.actionHideOffline, SIGNAL(triggered(bool)),
+            m_rosterModel, SLOT(hideOffline(bool)) );
 
     connect(m_preferencesDialog, SIGNAL(applied()),
             this, SLOT(preferencesApplied()));
