@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_preferencesDialog(new PreferencesDialog(this))
 {
     ui.setupUi(this);
-    readSetting();
+    readPreferences();
 
     //m_loginWidget->hide();
     //m_rosterTreeView->hide();
@@ -78,27 +78,18 @@ MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::readSetting()
+void MainWindow::readPreferences()
 {
-    readAccountSetting();
-}
-
-void MainWindow::readAccountSetting()
-{
+    m_preferences.load();
     m_loginWidget->readData(&m_preferences);
 }
 
-void MainWindow::writeSetting()
+void MainWindow::writePreferences()
 {
-    writeAccountSetting();
-    m_preferences.save();
-}
-
-void MainWindow::writeAccountSetting()
-{
-    // if loginwidget is visible, save its setting
     if (m_loginWidget->isVisible())
         m_loginWidget->writeData(&m_preferences);
+
+    m_preferences.save();
 }
 
 void MainWindow::login()
@@ -222,7 +213,7 @@ void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     //qDeleteAll(m_chatWindows);
-    writeSetting();
+    writePreferences();
     event->accept();
 }
 
