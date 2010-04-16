@@ -12,7 +12,7 @@
 #include "LoginWidget.h"
 #include <QSettings>
 #include "PreferencesDialog.h"
-#include <QVBoxLayout>
+#include "CloseNoticeDialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -22,7 +22,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_unreadMessageModel(new UnreadMessageModel(this)),
     m_unreadMessageWindow(new UnreadMessageWindow(this)),
     m_loginWidget(new LoginWidget(this)),
-    m_preferencesDialog(new PreferencesDialog(this))
+    m_preferencesDialog(new PreferencesDialog(this)),
+    m_closeToTrayDialog(0)
 {
     ui.setupUi(this);
     readPreferences();
@@ -89,6 +90,7 @@ void MainWindow::readPreferences()
 
     // action
     ui.actionHideOffline->setChecked(m_preferences.hideOffline);
+    m_rosterModel->setHideOffline(m_preferences.hideOffline);
 
     m_loginWidget->readData(&m_preferences);
 }
@@ -222,9 +224,21 @@ void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    //qDeleteAll(m_chatWindows);
-    writePreferences();
-    event->accept();
+    if (m_preferences.closeToTrayNotice) {
+        if (m_closeToTrayDialog == 0)
+            m_closeToTrayDialog = new CloseNoticeDialog(this);
+        m_closeToTrayDialog->readData(&m_preferences);
+        if (m_closeToTrayDialog->exec())
+            m_closeToTrayDialog->writeDate(&m_preferences);
+    }
+
+    if (m_preferences.closeToTray) {
+        hide();
+        event->ignore();
+    } else {
+        writePreferences();
+        event->accept();
+    }
 }
 
 void MainWindow::setupTrayIcon()
@@ -233,7 +247,7 @@ void MainWindow::setupTrayIcon()
     changeTrayIcon(online);
 
     m_quitAction = new QAction(tr("&Quit"), this);
-    connect(m_quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(m_quitAction, SIGNAL(triggered()), this, SLOT(quit()));
 
     m_trayIconMenu = new QMenu(this);
     m_trayIconMenu->addAction(m_quitAction);
@@ -320,4 +334,10 @@ void MainWindow::changeToLogin()
 void MainWindow::changeToRoster()
 {
     ui.stackedWidget->setCurrentIndex(1);
+}
+
+void MainWindow::quit()
+{
+    writePreferences();
+    qApp->quit();
 }
