@@ -16,7 +16,6 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    m_centralLayout(new QVBoxLayout),
     m_client(new XmppClient(this)),
     m_rosterModel(new RosterModel(this)),
     m_rosterTreeView(new QTreeView(this)),
@@ -35,7 +34,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_rosterTreeView->setHeaderHidden(true);
     m_rosterTreeView->setAnimated(true);
     m_rosterTreeView->setExpandsOnDoubleClick(false);
-    ui.widget->setLayout(m_centralLayout);
+    ui.stackedWidget->addWidget(m_loginWidget);
+    ui.stackedWidget->addWidget(m_rosterTreeView);
+
     changeToLogin();
     //setCentralWidget(m_loginWidget);
 
@@ -117,6 +118,7 @@ void MainWindow::clientConnected()
 
 void MainWindow::rosterReceived()
 {
+    m_rosterModel->setRoster(&m_client->getRoster());
     changeToRoster();
 }
 
@@ -311,19 +313,11 @@ void MainWindow::hideOffline(bool hide)
 
 void MainWindow::changeToLogin()
 {
-    m_rosterTreeView->hide();
-    m_centralLayout->removeWidget(m_rosterTreeView);
-    m_centralLayout->addWidget(m_loginWidget);
     m_loginWidget->unlock();
-    //m_loginWidget->readData(&m_preferences);
-    m_loginWidget->show();
+    ui.stackedWidget->setCurrentIndex(0);
 }
 
 void MainWindow::changeToRoster()
 {
-    m_loginWidget->hide();
-    m_centralLayout->removeWidget(m_loginWidget);
-    m_centralLayout->addWidget(m_rosterTreeView);
-    m_rosterModel->setRoster(&m_client->getRoster());
-    m_rosterTreeView->show();
+    ui.stackedWidget->setCurrentIndex(1);
 }
