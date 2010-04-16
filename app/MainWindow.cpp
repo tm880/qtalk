@@ -69,7 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui.actionLogout, SIGNAL(triggered()),
             m_client, SLOT(disconnect()));
     connect(ui.actionHideOffline, SIGNAL(triggered(bool)),
-            m_rosterModel, SLOT(hideOffline(bool)) );
+            this, SLOT(hideOffline(bool)) );
 
     connect(m_preferencesDialog, SIGNAL(applied()),
             this, SLOT(preferencesApplied()));
@@ -85,6 +85,10 @@ MainWindow::~MainWindow()
 void MainWindow::readPreferences()
 {
     m_preferences.load();
+
+    // action
+    ui.actionHideOffline->setChecked(m_preferences.hideOffline);
+
     m_loginWidget->readData(&m_preferences);
 }
 
@@ -287,10 +291,22 @@ void MainWindow::openPreferencesDialog()
 void MainWindow::preferencesApplied()
 {
     m_preferencesDialog->writeData(&m_preferences);
+
+    if (m_preferencesDialog->isHideOfflineChanged()) {
+        ui.actionHideOffline->setChecked(m_preferences.hideOffline);
+        hideOffline(m_preferences.hideOffline);
+    }
+
     if (m_preferencesDialog->isAccountChanged())
         m_loginWidget->readData(&m_preferences);
 
     m_preferences.save();
+}
+
+void MainWindow::hideOffline(bool hide)
+{
+    m_preferences.hideOffline = hide;
+    m_rosterModel->setHideOffline(hide);
 }
 
 void MainWindow::changeToLogin()
