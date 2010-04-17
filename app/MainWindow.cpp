@@ -93,7 +93,7 @@ void MainWindow::readPreferences()
 
     // action
     ui.actionHideOffline->setChecked(m_preferences.hideOffline);
-    m_rosterModel->setHideOffline(m_preferences.hideOffline);
+    m_rosterModel->readPref(&m_preferences);
 
     m_loginWidget->readData(&m_preferences);
 }
@@ -310,9 +310,9 @@ void MainWindow::preferencesApplied()
 {
     m_preferencesDialog->writeData(&m_preferences);
 
-    if (m_preferencesDialog->isHideOfflineChanged()) {
+    if (m_preferencesDialog->isRosterPrefChanged()) {
         ui.actionHideOffline->setChecked(m_preferences.hideOffline);
-        hideOffline(m_preferences.hideOffline);
+        m_rosterModel->readPref(&m_preferences);
     }
 
     if (m_preferencesDialog->isAccountChanged())
@@ -324,7 +324,7 @@ void MainWindow::preferencesApplied()
 void MainWindow::hideOffline(bool hide)
 {
     m_preferences.hideOffline = hide;
-    m_rosterModel->setHideOffline(hide);
+    m_rosterModel->readPref(&m_preferences);
 }
 
 void MainWindow::changeToLogin()
