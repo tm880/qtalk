@@ -36,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //m_rosterTreeView->setExpandsOnDoubleClick(false);
     m_rosterTreeView->setIconSize(QSize(64, 64));
     m_rosterTreeView->setRootIsDecorated(false);
+
     ui.stackedWidget->addWidget(m_loginWidget);
     ui.stackedWidget->addWidget(m_rosterTreeView);
 
@@ -60,13 +61,13 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(clientConnected()));
     connect(&m_client->getRoster(), SIGNAL(rosterReceived()),
             this, SLOT(rosterReceived()));
-    connect(m_client, SIGNAL(messageReceived(const QXmppMessage&)),
-            this, SLOT(messageReceived(const QXmppMessage&)));
     connect(m_client, SIGNAL(disconnected()),
             this, SLOT(clientDisconnect()));
     connect(m_client, SIGNAL(error(QXmppClient::Error)),
             this, SLOT(clientError(QXmppClient::Error)));
 
+    connect(m_rosterModel, SIGNAL(parseDone()),
+            this, SLOT(changeToRoster()) );
     connect(m_rosterTreeView, SIGNAL(clicked(const QModelIndex &)),
             this, SLOT(rosterDoubleClicked(const QModelIndex &)));
     connect(ui.actionPreferences, SIGNAL(triggered()),
@@ -119,11 +120,6 @@ void MainWindow::login()
 void MainWindow::clientConnected()
 {
     m_loginWidget->showState("Connect successful");
-}
-
-void MainWindow::rosterReceived()
-{
-    changeToRoster();
 }
 
 void MainWindow::messageReceived(const QXmppMessage& message)
@@ -336,6 +332,7 @@ void MainWindow::changeToLogin()
 void MainWindow::changeToRoster()
 {
     ui.stackedWidget->setCurrentIndex(1);
+    m_rosterTreeView->expandToDepth(1);
 }
 
 void MainWindow::quit()
