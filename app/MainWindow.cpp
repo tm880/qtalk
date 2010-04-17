@@ -13,6 +13,7 @@
 #include <QSettings>
 #include "PreferencesDialog.h"
 #include "CloseNoticeDialog.h"
+#include "RosterModel.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -28,8 +29,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui.setupUi(this);
     readPreferences();
 
-    //m_loginWidget->hide();
-    //m_rosterTreeView->hide();
     setupTrayIcon();
 
     m_rosterTreeView->setHeaderHidden(true);
@@ -39,6 +38,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_rosterTreeView->setRootIsDecorated(false);
     ui.stackedWidget->addWidget(m_loginWidget);
     ui.stackedWidget->addWidget(m_rosterTreeView);
+
+    m_rosterModel->setClient(m_client);
 
     changeToLogin();
     //setCentralWidget(m_loginWidget);
@@ -122,7 +123,6 @@ void MainWindow::clientConnected()
 
 void MainWindow::rosterReceived()
 {
-    m_rosterModel->setRoster(&m_client->getRoster());
     changeToRoster();
 }
 
