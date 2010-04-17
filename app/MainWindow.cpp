@@ -34,7 +34,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_rosterTreeView->setHeaderHidden(true);
     m_rosterTreeView->setAnimated(true);
-    m_rosterTreeView->setExpandsOnDoubleClick(false);
+    //m_rosterTreeView->setExpandsOnDoubleClick(false);
+    m_rosterTreeView->setIconSize(QSize(64, 64));
+    m_rosterTreeView->setRootIsDecorated(false);
     ui.stackedWidget->addWidget(m_loginWidget);
     ui.stackedWidget->addWidget(m_rosterTreeView);
 
@@ -64,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_client, SIGNAL(error(QXmppClient::Error)),
             this, SLOT(clientError(QXmppClient::Error)));
 
-    connect(m_rosterTreeView, SIGNAL(doubleClicked(const QModelIndex &)),
+    connect(m_rosterTreeView, SIGNAL(clicked(const QModelIndex &)),
             this, SLOT(rosterDoubleClicked(const QModelIndex &)));
     connect(ui.actionPreferences, SIGNAL(triggered()),
             this, SLOT(openPreferencesDialog()));
