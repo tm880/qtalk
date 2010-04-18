@@ -70,9 +70,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_rosterModel, SIGNAL(parseDone()),
             this, SLOT(changeToRoster()) );
     connect(m_rosterModel, SIGNAL(parseDone()),
-            this, SLOT(rosterViewChanged()) );
+            this, SLOT(rosterViewHiddenUpdate()) );
     connect(m_rosterModel, SIGNAL(hiddenUpdate()),
-            this, SLOT(rosterViewChanged()) );
+            this, SLOT(rosterViewHiddenUpdate()) );
     connect(m_rosterTreeView, SIGNAL(clicked(const QModelIndex &)),
             this, SLOT(rosterDoubleClicked(const QModelIndex &)));
     connect(ui.actionPreferences, SIGNAL(triggered()),
@@ -319,7 +319,7 @@ void MainWindow::preferencesApplied()
     if (m_preferencesDialog->isRosterPrefChanged()) {
         ui.actionHideOffline->setChecked(m_preferences.hideOffline);
         m_rosterModel->readPref(&m_preferences);
-        rosterViewChanged();
+        rosterViewHiddenUpdate();
     }
 
     m_rosterTreeView->setIconSize(QSize(m_preferences.rosterIconSize, m_preferences.rosterIconSize));
@@ -334,7 +334,7 @@ void MainWindow::hideOffline(bool hide)
 {
     m_preferences.hideOffline = hide;
     m_rosterModel->readPref(&m_preferences);
-    rosterViewChanged();
+    rosterViewHiddenUpdate();
 }
 
 void MainWindow::changeToLogin()
@@ -359,7 +359,7 @@ void MainWindow::rosterIconResize()
     setRosterIconSize(m_preferences.rosterIconSize);
 }
 
-void MainWindow::rosterViewChanged()
+void MainWindow::rosterViewHiddenUpdate()
 {
     foreach (QModelIndex contactIndex, m_rosterModel->allIndex()) {
         m_rosterTreeView->setRowHidden(contactIndex.row(),
