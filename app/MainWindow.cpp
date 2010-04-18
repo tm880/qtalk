@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_rosterTreeView->setHeaderHidden(true);
     m_rosterTreeView->setAnimated(true);
     //m_rosterTreeView->setExpandsOnDoubleClick(false);
-    m_rosterTreeView->setIconSize(QSize(64, 64));
+    rosterIconResize();
     m_rosterTreeView->setRootIsDecorated(false);
 
     ui.stackedWidget->addWidget(m_loginWidget);
@@ -49,23 +49,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_loginWidget, SIGNAL(login()),
             this, SLOT(login()));
+
+    // unread message
     connect(m_unreadMessageWindow, SIGNAL(unreadListClicked(const QModelIndex&)),
             this, SLOT(getUnreadListClicked(const QModelIndex&)));
-
     connect(m_unreadMessageModel, SIGNAL(messageCleared()),
             this, SLOT(unreadMessageCleared()));
     connect(m_unreadMessageWindow, SIGNAL(readAll()),
             this, SLOT(readAllUnreadMessage()));
 
+    // xmpp client
     connect(m_client, SIGNAL(connected()),
             this, SLOT(clientConnected()));
-    connect(&m_client->getRoster(), SIGNAL(rosterReceived()),
-            this, SLOT(rosterReceived()));
     connect(m_client, SIGNAL(disconnected()),
             this, SLOT(clientDisconnect()));
     connect(m_client, SIGNAL(error(QXmppClient::Error)),
             this, SLOT(clientError(QXmppClient::Error)));
 
+    // roster model and view
     connect(m_rosterModel, SIGNAL(parseDone()),
             this, SLOT(changeToRoster()) );
     connect(m_rosterTreeView, SIGNAL(clicked(const QModelIndex &)),
@@ -77,8 +78,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui.actionHideOffline, SIGNAL(triggered(bool)),
             this, SLOT(hideOffline(bool)) );
 
+    // preferences dialog
     connect(m_preferencesDialog, SIGNAL(applied()),
             this, SLOT(preferencesApplied()));
+    connect(m_preferencesDialog, SIGNAL(rosterIconSizeChanged(int)),
+            this, SLOT(setRosterIconSize(int)) );
+    connect(m_preferencesDialog, SIGNAL(rosterIconReseze()),
+            this, SLOT(rosterIconResize()) );
 
     m_rosterTreeView->setModel(m_rosterModel);
 
@@ -311,6 +317,8 @@ void MainWindow::preferencesApplied()
         m_rosterModel->readPref(&m_preferences);
     }
 
+    m_rosterTreeView->setIconSize(QSize(m_preferences.rosterIconSize, m_preferences.rosterIconSize));
+
     if (m_preferencesDialog->isAccountChanged())
         m_loginWidget->readData(&m_preferences);
 
@@ -333,6 +341,16 @@ void MainWindow::changeToRoster()
 {
     ui.stackedWidget->setCurrentIndex(1);
     m_rosterTreeView->expandToDepth(1);
+}
+
+void MainWindow::setRosterIconSize(int num)
+{
+    m_rosterTreeView->setIconSize(QSize(num, num));
+}
+
+void MainWindow::rosterIconResize()
+{
+    setRosterIconSize(m_preferences.rosterIconSize);
 }
 
 void MainWindow::quit()
