@@ -280,10 +280,10 @@ void MainWindow::changeTrayIcon(TrayIconType type)
 {
     switch (type){
         case online:
-            m_trayIcon->setIcon(QIcon(":/image/im-user.png"));
+            m_trayIcon->setIcon(QIcon(":/images/im-user.png"));
             break;
         case newMessage:
-            m_trayIcon->setIcon(QIcon(":/image/mail-unread-new.png"));
+            m_trayIcon->setIcon(QIcon(":/images/mail-unread-new.png"));
             break;
         default:
             break;
