@@ -14,6 +14,7 @@
 #include "PreferencesDialog.h"
 #include "CloseNoticeDialog.h"
 #include "RosterModel.h"
+#include <QXmppVCard.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -183,10 +184,14 @@ void MainWindow::openChatWindow(const QString &jid)
 {
     ChatWindow *chatWindow;
     if (m_chatWindows[jid] == NULL) {
+        // new chatWindow
         chatWindow = new ChatWindow(this);
-        chatWindow->setJid(jid);
         chatWindow->setClient(m_client);
+        chatWindow->setJid(jid);
         chatWindow->setAttribute(Qt::WA_DeleteOnClose);
+
+        if (m_rosterModel->hasVCard(jidToBareJid(jid)))
+            chatWindow->setVCard(m_rosterModel->getVCard(jidToBareJid(jid)));
 
         m_chatWindows[jid] = chatWindow;
         chatWindow->setWindowTitle(jid);
@@ -207,6 +212,7 @@ void MainWindow::openChatWindow(const QString &jid)
             m_rosterModel->messageReaded(jidToBareJid(jid), jidToResource(jid));
         }
     } else {
+        // exist
         chatWindow = m_chatWindows[jid];
     }
     chatWindow->readPref(&m_preferences);
@@ -274,7 +280,7 @@ void MainWindow::changeTrayIcon(TrayIconType type)
 {
     switch (type){
         case online:
-            m_trayIcon->setIcon(QIcon(":/image/user-online.png"));
+            m_trayIcon->setIcon(QIcon(":/image/im-user.png"));
             break;
         case newMessage:
             m_trayIcon->setIcon(QIcon(":/image/mail-unread-new.png"));
