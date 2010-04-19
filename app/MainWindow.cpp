@@ -209,6 +209,7 @@ void MainWindow::openChatWindow(const QString &jid)
     } else {
         chatWindow = m_chatWindows[jid];
     }
+    chatWindow->readPref(&m_preferences);
     chatWindow->show();
     chatWindow->raise();
     chatWindow->activateWindow();
