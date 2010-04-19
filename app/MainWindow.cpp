@@ -65,6 +65,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(clientDisconnect()));
     connect(m_client, SIGNAL(error(QXmppClient::Error)),
             this, SLOT(clientError(QXmppClient::Error)));
+    connect(m_client, SIGNAL(messageReceived(QXmppMessage)),
+            this, SLOT(messageReceived(QXmppMessage)) );
 
     // roster model and view
     connect(m_rosterModel, SIGNAL(parseDone()),
