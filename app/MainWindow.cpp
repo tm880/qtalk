@@ -362,7 +362,7 @@ void MainWindow::changeToLogin()
 void MainWindow::changeToRoster()
 {
     ui.stackedWidget->setCurrentIndex(1);
-    m_rosterTreeView->expandToDepth(1);
+    m_rosterTreeView->expandToDepth(0);
 }
 
 void MainWindow::setRosterIconSize(int num)
