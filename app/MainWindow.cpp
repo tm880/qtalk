@@ -34,9 +34,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_rosterTreeView->setHeaderHidden(true);
     m_rosterTreeView->setAnimated(true);
-    //m_rosterTreeView->setExpandsOnDoubleClick(false);
     rosterIconResize();
     m_rosterTreeView->setRootIsDecorated(false);
+    m_rosterTreeView->setWordWrap(true);
+    m_rosterTreeView->setAlternatingRowColors(true);
 
     ui.stackedWidget->addWidget(m_loginWidget);
     ui.stackedWidget->addWidget(m_rosterTreeView);
