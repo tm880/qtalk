@@ -14,7 +14,7 @@
 #include "PreferencesDialog.h"
 #include "CloseNoticeDialog.h"
 #include "RosterModel.h"
-#include <QXmppVCard.h>
+#include <QXmppVCardManager.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -93,8 +93,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_preferencesDialog, SIGNAL(rosterIconReseze()),
             this, SLOT(rosterIconResize()) );
 
+    // VCard
+    connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(QXmppVCard&)),
+            this, SLOT(vCardReveived(const QXmppVCard&)) );
+
     m_rosterTreeView->setModel(m_rosterModel);
 
+    if (m_preferences.autoLogin)
+        login();
 }
 
 MainWindow::~MainWindow()
@@ -374,6 +380,14 @@ void MainWindow::rosterViewHiddenUpdate()
         m_rosterTreeView->setRowHidden(contactIndex.row(),
                                        contactIndex.parent(),
                                        m_rosterModel->isIndexHidden(contactIndex));;
+    }
+}
+
+void MainWindow::vCardReveived(const QXmppVCard &vCard)
+{
+    if (m_chatWindows.contains(vCard.from())) {
+        ChatWindow *window = m_chatWindows[vCard.from()];
+        window->setVCard(vCard);
     }
 }
 
