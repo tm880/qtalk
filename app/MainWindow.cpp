@@ -15,6 +15,11 @@
 #include "CloseNoticeDialog.h"
 #include "RosterModel.h"
 #include <QXmppVCardManager.h>
+#include "TransferManagerWindow.h"
+#include <QMessageBox>
+#include <QDialog>
+#include <QListWidget>
+#include <QDialogButtonBox>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -25,7 +30,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_unreadMessageWindow(new UnreadMessageWindow(this)),
     m_loginWidget(new LoginWidget(this)),
     m_preferencesDialog(new PreferencesDialog(this)),
-    m_closeToTrayDialog(0)
+    m_closeToTrayDialog(0),
+    m_transferManagerWindow(0)
 {
     ui.setupUi(this);
     readPreferences();
@@ -79,12 +85,16 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(rosterViewHiddenUpdate()) );
     connect(m_rosterTreeView, SIGNAL(clicked(const QModelIndex &)),
             this, SLOT(rosterDoubleClicked(const QModelIndex &)));
+
+    // action
     connect(ui.actionPreferences, SIGNAL(triggered()),
             this, SLOT(openPreferencesDialog()));
     connect(ui.actionLogout, SIGNAL(triggered()),
             m_client, SLOT(disconnect()));
     connect(ui.actionHideOffline, SIGNAL(triggered(bool)),
             this, SLOT(hideOffline(bool)) );
+    connect(ui.actionTransferManager, SIGNAL(triggered()),
+            this, SLOT(openTransferWindow()) );
 
     // preferences dialog
     connect(m_preferencesDialog, SIGNAL(applied()),
@@ -193,6 +203,10 @@ void MainWindow::openChatWindow(const QString &jid)
     if (m_chatWindows[jid] == NULL) {
         // new chatWindow
         chatWindow = new ChatWindow(this);
+
+        connect(chatWindow, SIGNAL(sendFile(QString,QString)),
+                this, SLOT(createTransferJob(QString,QString)) );
+
         chatWindow->setClient(m_client);
         chatWindow->setJid(jid);
         chatWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -396,4 +410,58 @@ void MainWindow::quit()
 {
     writePreferences();
     qApp->quit();
+}
+
+void MainWindow::openTransferWindow()
+{
+    if (m_transferManagerWindow == 0)
+        m_transferManagerWindow = new TransferManagerWindow(&m_client->getTransferManager(), this);
+    m_transferManagerWindow->show();
+}
+
+void MainWindow::createTransferJob(const QString &jid, const QString &fileName)
+{
+    if (m_transferManagerWindow == 0)
+        m_transferManagerWindow = new TransferManagerWindow(&m_client->getTransferManager(), this);
+
+    QString newJid = jid;
+    if (jidToResource(jid).isEmpty()) {
+        QStringList resources = m_client->getRoster().getAllPresencesForBareJid(jid).keys();
+        if (resources.isEmpty()) {
+            QMessageBox::warning(0, "Contact Offline", "Can not send file to offline contact.");
+            return;
+        } else if (resources.count() == 1) {
+            // auto select the single resource
+            newJid = jid + "/" + resources.at(0);
+        } else {
+            // let usr select witch resource to send
+            QDialog dialog;
+            QListWidget *listWidget = new QListWidget(&dialog);
+            foreach(QString resource, resources) {
+                QListWidgetItem *item = new QListWidgetItem(resource);
+                listWidget->addItem(item);
+            }
+            listWidget->setCurrentRow(0);
+            QVBoxLayout *layout = new QVBoxLayout;
+            QDialogButtonBox *buttonBox = new QDialogButtonBox(&dialog);
+            buttonBox->setStandardButtons(QDialogButtonBox::Cancel | QDialogButtonBox::Ok);
+            connect(buttonBox, SIGNAL(accepted()),
+                    &dialog, SLOT(accept()) );
+            connect(buttonBox, SIGNAL(rejected()),
+                    &dialog, SLOT(reject()) );
+            layout->addWidget(listWidget);
+            layout->addWidget(buttonBox);
+            dialog.setLayout(layout);
+            if (dialog.exec()) {
+                // accept
+                newJid = jid + "/" + resources.at(listWidget->currentRow());
+            } else {
+                // reject
+                return;
+            }
+        }
+    }
+
+    m_transferManagerWindow->createTransferJob(newJid, fileName);
+    m_transferManagerWindow->show();
 }
