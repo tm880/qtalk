@@ -83,8 +83,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(rosterViewHiddenUpdate()) );
     connect(m_rosterModel, SIGNAL(hiddenUpdate()),
             this, SLOT(rosterViewHiddenUpdate()) );
-    connect(m_rosterTreeView, SIGNAL(clicked(const QModelIndex &)),
-            this, SLOT(rosterDoubleClicked(const QModelIndex &)));
+    connect(m_rosterTreeView, SIGNAL(pressed(const QModelIndex &)),
+            this, SLOT(rosterItemClicked(const QModelIndex &)));
 
     // action
     connect(ui.actionPreferences, SIGNAL(triggered()),
@@ -172,18 +172,20 @@ void MainWindow::messageReceived(const QXmppMessage& message)
     }
 }
 
-void MainWindow::rosterDoubleClicked(const QModelIndex &index)
+void MainWindow::rosterItemClicked(const QModelIndex &index)
 {
-    RosterModel::ItemType type = m_rosterModel->itemTypeAt(index);
-    if (type == RosterModel::contact ||
+    if (QApplication::mouseButtons() == Qt::LeftButton) {
+        RosterModel::ItemType type = m_rosterModel->itemTypeAt(index);
+        if (type == RosterModel::contact ||
             type == RosterModel::resource) {
-        QString jid = m_rosterModel->jidAt(index);
-        openChatWindow(jid);
-    } else if (type == RosterModel::group) {
-        if (m_rosterTreeView->isExpanded(index)) {
-            m_rosterTreeView->collapse(index);
-        } else {
-            m_rosterTreeView->expand(index);
+            QString jid = m_rosterModel->jidAt(index);
+            openChatWindow(jid);
+        } else if (type == RosterModel::group) {
+            if (m_rosterTreeView->isExpanded(index)) {
+                m_rosterTreeView->collapse(index);
+            } else {
+                m_rosterTreeView->expand(index);
+            }
         }
     }
 }
