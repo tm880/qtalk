@@ -20,6 +20,7 @@
 #include <QDialog>
 #include <QListWidget>
 #include <QDialogButtonBox>
+#include <ContactInfoDialog.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -44,6 +45,16 @@ MainWindow::MainWindow(QWidget *parent) :
     m_rosterTreeView->setRootIsDecorated(false);
     m_rosterTreeView->setWordWrap(true);
     m_rosterTreeView->setAlternatingRowColors(true);
+    m_rosterTreeView->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    m_actionStartChat = new QAction(this);
+    m_actionStartChat->setText(QString(tr("Open Chat Window")));
+    connect(m_actionStartChat, SIGNAL(triggered()),
+            this, SLOT(actionStartChat()) );
+    m_actionContactInfo = new QAction(this);
+    m_actionContactInfo->setText(QString(tr("Contact Info")));
+    connect(m_actionContactInfo, SIGNAL(triggered()),
+            this, SLOT(actionContactInfo()) );
 
     ui.stackedWidget->addWidget(m_loginWidget);
     ui.stackedWidget->addWidget(m_rosterTreeView);
@@ -85,6 +96,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(rosterViewHiddenUpdate()) );
     connect(m_rosterTreeView, SIGNAL(pressed(const QModelIndex &)),
             this, SLOT(rosterItemClicked(const QModelIndex &)));
+    connect(m_rosterTreeView, SIGNAL(customContextMenuRequested(QPoint)),
+            this, SLOT(rosterContextMenu(const QPoint&)) );
 
     // action
     connect(ui.actionPreferences, SIGNAL(triggered()),
@@ -242,6 +255,22 @@ void MainWindow::openChatWindow(const QString &jid)
     chatWindow->show();
     chatWindow->raise();
     chatWindow->activateWindow();
+}
+
+void MainWindow::actionStartChat()
+{
+    openChatWindow(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+}
+
+void MainWindow::actionContactInfo()
+{
+    ContactInfoDialog *dialog = new ContactInfoDialog();
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    dialog->setData(m_client->getRoster().getRosterEntry(bareJid).name(),
+                    bareJid,
+                    m_rosterModel->getVCard(bareJid));
+    dialog->show();
 }
 
 void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -466,4 +495,18 @@ void MainWindow::createTransferJob(const QString &jid, const QString &fileName)
 
     m_transferManagerWindow->createTransferJob(newJid, fileName);
     m_transferManagerWindow->show();
+}
+
+void MainWindow::rosterContextMenu(const QPoint &position)
+{
+    QList<QAction *> actions;
+    QModelIndex index = m_rosterTreeView->indexAt(position);
+    if (index.isValid()) {
+        if (m_rosterModel->itemTypeAt(index) != RosterModel::group) {
+            actions << m_actionStartChat;
+            actions << m_actionContactInfo;
+        }
+    }
+    if (!actions.isEmpty())
+        QMenu::exec(actions, m_rosterTreeView->mapToGlobal(position));
 }
