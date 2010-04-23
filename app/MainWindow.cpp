@@ -135,12 +135,21 @@ void MainWindow::readPreferences()
     m_rosterModel->readPref(&m_preferences);
 
     m_loginWidget->readData(&m_preferences);
+
+    if (m_preferences.mainWindowGeometry.isEmpty())
+        move(QApplication::desktop()->screenGeometry().center() - geometry().center());
+    else
+        restoreGeometry(m_preferences.mainWindowGeometry);
+    restoreState(m_preferences.mainWindowState);
 }
 
 void MainWindow::writePreferences()
 {
     if (m_loginWidget->isVisible())
         m_loginWidget->writeData(&m_preferences);
+
+    m_preferences.mainWindowGeometry = saveGeometry();
+    m_preferences.mainWindowState = saveState();
 
     m_preferences.save();
 }
