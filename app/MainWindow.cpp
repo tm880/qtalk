@@ -296,13 +296,13 @@ void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
             else
                 m_unreadMessageWindow->show();
         } else {
-            if (isActiveWindow()) {
+            if (isVisible()) {
                 hide();
             } else {
                 //hide();
                 show();
-                raise();
-                activateWindow();
+                //raise();
+                //activateWindow();
             }
         }
     }
