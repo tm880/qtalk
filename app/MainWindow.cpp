@@ -21,6 +21,7 @@
 #include <QListWidget>
 #include <QDialogButtonBox>
 #include <ContactInfoDialog.h>
+#include <QDesktopWidget>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -28,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_rosterModel(new RosterModel(this)),
     m_rosterTreeView(new QTreeView(this)),
     m_unreadMessageModel(new UnreadMessageModel(this)),
-    m_unreadMessageWindow(new UnreadMessageWindow(this)),
+    m_unreadMessageWindow(0),
     m_loginWidget(new LoginWidget(this)),
     m_preferencesDialog(new PreferencesDialog(this)),
     m_closeToTrayDialog(0),
@@ -64,18 +65,12 @@ MainWindow::MainWindow(QWidget *parent) :
     changeToLogin();
     //setCentralWidget(m_loginWidget);
 
-    m_unreadMessageWindow->setModel(m_unreadMessageModel);
-
     connect(m_loginWidget, SIGNAL(login()),
             this, SLOT(login()));
 
     // unread message
-    connect(m_unreadMessageWindow, SIGNAL(unreadListClicked(const QModelIndex&)),
-            this, SLOT(getUnreadListClicked(const QModelIndex&)));
     connect(m_unreadMessageModel, SIGNAL(messageCleared()),
             this, SLOT(unreadMessageCleared()));
-    connect(m_unreadMessageWindow, SIGNAL(readAll()),
-            this, SLOT(readAllUnreadMessage()));
 
     // xmpp client
     connect(m_client, SIGNAL(connected()),
@@ -247,11 +242,15 @@ void MainWindow::openChatWindow(const QString &jid)
             // resource
             m_rosterModel->messageReaded(jidToBareJid(jid), jidToResource(jid));
         }
+
+        // move to screan center
+        chatWindow->move(QApplication::desktop()->screenGeometry().center() - chatWindow->geometry().center());
     } else {
         // exist
         chatWindow = m_chatWindows[jid];
     }
     chatWindow->readPref(&m_preferences);
+
     chatWindow->show();
     chatWindow->raise();
     chatWindow->activateWindow();
@@ -275,14 +274,19 @@ void MainWindow::actionContactInfo()
 
 void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
+    if (m_unreadMessageWindow == 0) {
+        createUnreadMessageWindow();
+    }
+
     if (reason == QSystemTrayIcon::Trigger) {
-        if (m_unreadMessageModel->hasAnyUnread()) {
+        if (m_unreadMessageModel->hasAnyUnread()
+            && m_unreadMessageWindow->isHidden()) {
             m_unreadMessageWindow->show();
         } else {
             if (isActiveWindow()) {
                 hide();
             } else {
-                hide();
+                //hide();
                 show();
                 raise();
                 activateWindow();
@@ -326,6 +330,18 @@ void MainWindow::setupTrayIcon()
             this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
 
     m_trayIcon->show();
+}
+
+void MainWindow::createUnreadMessageWindow()
+{
+    m_unreadMessageWindow = new UnreadMessageWindow(this);
+    m_unreadMessageWindow->move(m_trayIcon->geometry().center() - m_unreadMessageWindow->geometry().center());
+    m_unreadMessageWindow->setModel(m_unreadMessageModel);
+
+    connect(m_unreadMessageWindow, SIGNAL(unreadListClicked(const QModelIndex&)),
+            this, SLOT(getUnreadListClicked(const QModelIndex&)));
+    connect(m_unreadMessageWindow, SIGNAL(readAll()),
+            this, SLOT(readAllUnreadMessage()));
 }
 
 void MainWindow::changeTrayIcon(TrayIconType type)
