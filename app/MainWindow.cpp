@@ -290,7 +290,11 @@ void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
     if (reason == QSystemTrayIcon::Trigger) {
         if (m_unreadMessageModel->hasAnyUnread()
             && m_unreadMessageWindow->isHidden()) {
-            m_unreadMessageWindow->show();
+            if (m_unreadMessageModel->rowCount(QModelIndex()) == 1)
+                // single
+                readAllUnreadMessage();
+            else
+                m_unreadMessageWindow->show();
         } else {
             if (isActiveWindow()) {
                 hide();
