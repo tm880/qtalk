@@ -509,9 +509,14 @@ void MainWindow::createTransferJob(const QString &jid, const QString &fileName)
                     &dialog, SLOT(accept()) );
             connect(buttonBox, SIGNAL(rejected()),
                     &dialog, SLOT(reject()) );
+            QLabel *label = new QLabel();
+            label->setText(tr("<b>Note:</b> Contact logined at multi resources, you must select witch resource to send"));
+            label->setWordWrap(true);
+            layout->addWidget(label);
             layout->addWidget(listWidget);
             layout->addWidget(buttonBox);
             dialog.setLayout(layout);
+            dialog.setWindowTitle(tr("Mutil Resources"));
             if (dialog.exec()) {
                 // accept
                 newJid = jid + "/" + resources.at(listWidget->currentRow());
