@@ -22,6 +22,7 @@
 #include <QDialogButtonBox>
 #include <ContactInfoDialog.h>
 #include <QDesktopWidget>
+#include <QXmppRosterIq.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -113,7 +114,7 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(rosterIconResize()) );
 
     // VCard
-    connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(QXmppVCard&)),
+    connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(const QXmppVCard&)),
             this, SLOT(vCardReveived(const QXmppVCard&)) );
 
     m_rosterTreeView->setModel(m_rosterModel);
