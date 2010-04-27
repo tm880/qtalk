@@ -559,5 +559,8 @@ void MainWindow::initTransferWindow()
     if (m_transferManagerWindow == 0) {
         m_transferManagerWindow = new TransferManagerWindow(&m_client->getTransferManager(), this);
         m_transferManagerWindow->move(QApplication::desktop()->screenGeometry().center() - m_transferManagerWindow->geometry().center());
+        connect(&m_client->getTransferManager(), SIGNAL(finished(QXmppTransferJob*)),
+                m_transferManagerWindow, SLOT(deleteFileHandel(QXmppTransferJob*)) );
+
     }
 }
