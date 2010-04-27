@@ -306,8 +306,8 @@ void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
             } else {
                 //hide();
                 show();
-                //raise();
-                //activateWindow();
+                raise();
+                activateWindow();
             }
         }
     }
@@ -556,6 +556,8 @@ void MainWindow::rosterContextMenu(const QPoint &position)
 
 void MainWindow::initTransferWindow()
 {
-    if (m_transferManagerWindow == 0)
+    if (m_transferManagerWindow == 0) {
         m_transferManagerWindow = new TransferManagerWindow(&m_client->getTransferManager(), this);
+        m_transferManagerWindow->move(QApplication::desktop()->screenGeometry().center() - m_transferManagerWindow->geometry().center());
+    }
 }
