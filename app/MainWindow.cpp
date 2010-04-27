@@ -117,6 +117,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(const QXmppVCard&)),
             this, SLOT(vCardReveived(const QXmppVCard&)) );
 
+    // transfer manager
+    connect(&m_client->getTransferManager(), SIGNAL(fileReceived(QXmppTransferJob*)),
+            this, SLOT(receivedTransferJob(QXmppTransferJob*)) );
+
     m_rosterTreeView->setModel(m_rosterModel);
 
     if (m_preferences.autoLogin)
@@ -475,15 +479,13 @@ void MainWindow::quit()
 
 void MainWindow::openTransferWindow()
 {
-    if (m_transferManagerWindow == 0)
-        m_transferManagerWindow = new TransferManagerWindow(&m_client->getTransferManager(), this);
+    initTransferWindow();
     m_transferManagerWindow->show();
 }
 
 void MainWindow::createTransferJob(const QString &jid, const QString &fileName)
 {
-    if (m_transferManagerWindow == 0)
-        m_transferManagerWindow = new TransferManagerWindow(&m_client->getTransferManager(), this);
+    initTransferWindow();
 
     QString newJid = jid;
     if (jidToResource(jid).isEmpty()) {
@@ -532,6 +534,12 @@ void MainWindow::createTransferJob(const QString &jid, const QString &fileName)
     m_transferManagerWindow->show();
 }
 
+void MainWindow::receivedTransferJob(QXmppTransferJob *offer)
+{
+    initTransferWindow();
+    m_transferManagerWindow->receivedTransferJob(offer);
+}
+
 void MainWindow::rosterContextMenu(const QPoint &position)
 {
     QList<QAction *> actions;
@@ -544,4 +552,10 @@ void MainWindow::rosterContextMenu(const QPoint &position)
     }
     if (!actions.isEmpty())
         QMenu::exec(actions, m_rosterTreeView->mapToGlobal(position));
+}
+
+void MainWindow::initTransferWindow()
+{
+    if (m_transferManagerWindow == 0)
+        m_transferManagerWindow = new TransferManagerWindow(&m_client->getTransferManager(), this);
 }
