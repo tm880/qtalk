@@ -99,7 +99,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui.actionPreferences, SIGNAL(triggered()),
             this, SLOT(openPreferencesDialog()));
     connect(ui.actionLogout, SIGNAL(triggered()),
-            m_client, SLOT(disconnect()));
+            this, SLOT(logout()));
     connect(ui.actionHideOffline, SIGNAL(triggered(bool)),
             this, SLOT(hideOffline(bool)) );
     connect(ui.actionTransferManager, SIGNAL(triggered()),
@@ -489,6 +489,12 @@ void MainWindow::vCardReveived(const QXmppVCard &vCard)
         ChatWindow *window = m_chatWindows[vCard.from()];
         window->setVCard(vCard);
     }
+}
+
+void MainWindow::logout()
+{
+    m_client->disconnect();
+    m_rosterModel->clear();
 }
 
 void MainWindow::quit()
