@@ -225,6 +225,8 @@ void MainWindow::openChatWindow(const QString &jid)
 
         connect(chatWindow, SIGNAL(sendFile(QString,QString)),
                 this, SLOT(createTransferJob(QString,QString)) );
+        connect(chatWindow, SIGNAL(viewContactInfo(QString)),
+                this, SLOT(openContactInfoDialog(QString)) );
 
         if (m_rosterModel->hasVCard(jidToBareJid(jid)))
             chatWindow->setVCard(m_rosterModel->getVCard(jidToBareJid(jid)));
@@ -268,13 +270,25 @@ void MainWindow::actionStartChat()
 
 void MainWindow::actionContactInfo()
 {
-    ContactInfoDialog *dialog = new ContactInfoDialog();
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
-    dialog->setData(m_client->getRoster().getRosterEntry(bareJid).name(),
-                    bareJid,
-                    m_rosterModel->getVCard(bareJid));
+    openContactInfoDialog(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+}
+
+void MainWindow::openContactInfoDialog(QString jid)
+{
+    QString bareJid = jidToBareJid(jid);
+    ContactInfoDialog *dialog;
+    if (m_contactInfoDialogs[bareJid] == NULL) {
+        dialog = new ContactInfoDialog(this);
+        m_contactInfoDialogs[bareJid] = dialog;
+        QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
+        dialog->setData(entry.name(), jid, m_rosterModel->getVCard(bareJid));
+        dialog->move(QApplication::desktop()->screenGeometry().center() - dialog->geometry().center());
+    } else {
+        dialog = m_contactInfoDialogs[bareJid];
+    }
     dialog->show();
+    dialog->raise();
+    dialog->activateWindow();
 }
 
 void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
