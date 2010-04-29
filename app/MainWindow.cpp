@@ -226,14 +226,10 @@ void MainWindow::openChatWindow(const QString &jid)
     ChatWindow *chatWindow;
     if (m_chatWindows[jid] == NULL) {
         // new chatWindow
-        chatWindow = new ChatWindow(this);
+        chatWindow = new ChatWindow(jid, m_client, this);
 
         connect(chatWindow, SIGNAL(sendFile(QString,QString)),
                 this, SLOT(createTransferJob(QString,QString)) );
-
-        chatWindow->setClient(m_client);
-        chatWindow->setJid(jid);
-        chatWindow->setAttribute(Qt::WA_DeleteOnClose);
 
         if (m_rosterModel->hasVCard(jidToBareJid(jid)))
             chatWindow->setVCard(m_rosterModel->getVCard(jidToBareJid(jid)));
