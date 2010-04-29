@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_unreadMessageModel(new UnreadMessageModel(this)),
     m_unreadMessageWindow(0),
     m_loginWidget(new LoginWidget(this)),
-    m_preferencesDialog(new PreferencesDialog(this)),
+    m_preferencesDialog(0),
     m_closeToTrayDialog(0),
     m_transferManagerWindow(0)
 {
@@ -107,13 +107,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui.actionQuit, SIGNAL(triggered()),
             this, SLOT(quit()) );
 
-    // preferences dialog
-    connect(m_preferencesDialog, SIGNAL(applied()),
-            this, SLOT(preferencesApplied()));
-    connect(m_preferencesDialog, SIGNAL(rosterIconSizeChanged(int)),
-            this, SLOT(setRosterIconSize(int)) );
-    connect(m_preferencesDialog, SIGNAL(rosterIconReseze()),
-            this, SLOT(rosterIconResize()) );
 
     // VCard
     connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(const QXmppVCard&)),
@@ -335,11 +328,14 @@ void MainWindow::setupTrayIcon()
     m_trayIcon = new QSystemTrayIcon(this);
     changeTrayIcon(online);
 
-    m_quitAction = new QAction(tr("&Quit"), this);
-    connect(m_quitAction, SIGNAL(triggered()), this, SLOT(quit()));
+    //m_quitAction = new QAction(tr("&Quit"), this);
+    //connect(m_quitAction, SIGNAL(triggered()), this, SLOT(quit()));
 
     m_trayIconMenu = new QMenu(this);
-    m_trayIconMenu->addAction(m_quitAction);
+    //m_trayIconMenu->addAction(m_quitAction);
+    m_trayIconMenu->addAction(ui.actionTransferManager);
+    m_trayIconMenu->addAction(ui.actionPreferences);
+    m_trayIconMenu->addAction(ui.actionQuit);
     m_trayIcon->setContextMenu(m_trayIconMenu);
 
     connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
@@ -401,6 +397,18 @@ void MainWindow::clientError(QXmppClient::Error)
 
 void MainWindow::openPreferencesDialog()
 {
+    if (m_preferencesDialog == 0) {
+        m_preferencesDialog = new PreferencesDialog(this);
+
+        // preferences dialog
+        connect(m_preferencesDialog, SIGNAL(applied()),
+                this, SLOT(preferencesApplied()));
+        connect(m_preferencesDialog, SIGNAL(rosterIconSizeChanged(int)),
+                this, SLOT(setRosterIconSize(int)) );
+        connect(m_preferencesDialog, SIGNAL(rosterIconReseze()),
+                this, SLOT(rosterIconResize()) );
+
+    }
     m_preferencesDialog->readData(&m_preferences);
     m_preferencesDialog->show();
 }
