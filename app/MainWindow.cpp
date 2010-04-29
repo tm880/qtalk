@@ -104,6 +104,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(hideOffline(bool)) );
     connect(ui.actionTransferManager, SIGNAL(triggered()),
             this, SLOT(openTransferWindow()) );
+    connect(ui.actionQuit, SIGNAL(triggered()),
+            this, SLOT(quit()) );
 
     // preferences dialog
     connect(m_preferencesDialog, SIGNAL(applied()),
@@ -165,8 +167,8 @@ void MainWindow::login()
     m_loginWidget->writeData(&m_preferences);
     m_loginWidget->showState("Login ...");
     //m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
-    m_client->connectToServer(m_loginWidget->host(), m_loginWidget->jid(),
-                              m_loginWidget->password(), m_loginWidget->port());
+    m_client->connectToServer(m_preferences.host, m_preferences.jid,
+                              m_preferences.password, m_preferences.port);
 }
 
 void MainWindow::clientConnected()
