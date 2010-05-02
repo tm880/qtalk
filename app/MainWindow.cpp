@@ -23,6 +23,7 @@
 #include <ContactInfoDialog.h>
 #include <QDesktopWidget>
 #include <QXmppRosterIq.h>
+#include "AddContactDialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -34,7 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_loginWidget(new LoginWidget(this)),
     m_preferencesDialog(0),
     m_closeToTrayDialog(0),
-    m_transferManagerWindow(0)
+    m_transferManagerWindow(0),
+    m_addContactDialog(0)
 {
     ui.setupUi(this);
     readPreferences();
@@ -104,6 +106,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(hideOffline(bool)) );
     connect(ui.actionTransferManager, SIGNAL(triggered()),
             this, SLOT(openTransferWindow()) );
+    connect(ui.actionAddContact, SIGNAL(triggered()),
+            this, SLOT(actionAddContact()) );
     connect(ui.actionQuit, SIGNAL(triggered()),
             this, SLOT(quit()) );
 
@@ -271,6 +275,23 @@ void MainWindow::actionStartChat()
 void MainWindow::actionContactInfo()
 {
     openContactInfoDialog(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+}
+
+void MainWindow::actionAddContact()
+{
+    if (m_addContactDialog == 0) {
+        m_addContactDialog = new AddContactDialog(this);
+    }
+
+    if (m_addContactDialog->exec()) {
+        QXmppRosterIq iq;
+        iq.setType(QXmppIq::Set);
+        QXmppRosterIq::Item item;
+        item.setBareJid(m_addContactDialog->jid());
+        item.setSubscriptionType(m_addContactDialog->subscriptionType());
+        iq.addItem(item);
+        m_client->sendPacket(iq);
+    }
 }
 
 void MainWindow::openContactInfoDialog(QString jid)
@@ -485,7 +506,7 @@ void MainWindow::rosterViewHiddenUpdate()
 
 void MainWindow::vCardReveived(const QXmppVCard &vCard)
 {
-    if (m_chatWindows.contains(vCard.from())) {
+    if (m_chatWindows[vCard.from()] != NULL) {
         ChatWindow *window = m_chatWindows[vCard.from()];
         window->setVCard(vCard);
     }
