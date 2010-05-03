@@ -42,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
     readPreferences();
 
     setupTrayIcon();
+    ui.toolBar->setVisible(false);
 
     m_rosterTreeView->setHeaderHidden(true);
     m_rosterTreeView->setAnimated(true);
@@ -528,12 +529,14 @@ void MainWindow::hideOffline(bool hide)
 
 void MainWindow::changeToLogin()
 {
+    ui.toolBar->setVisible(false);
     m_loginWidget->unlock();
     ui.stackedWidget->setCurrentIndex(0);
 }
 
 void MainWindow::changeToRoster()
 {
+    ui.toolBar->setVisible(true);
     ui.stackedWidget->setCurrentIndex(1);
     m_rosterTreeView->expandToDepth(0);
 }
