@@ -111,6 +111,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(actionUnsubsribe()) );
     connect(ui.actionDropSubscribe, SIGNAL(triggered()),
             this, SLOT(actionDropSubsribe()) );
+    connect(ui.actionAllowSubcribe, SIGNAL(triggered()),
+            this, SLOT(actionAllowSubsribe()) );
 
     // VCard
     connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(const QXmppVCard&)),
@@ -326,6 +328,14 @@ void MainWindow::actionDropSubsribe()
 {
     QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
     QXmppPresence presence(QXmppPresence::Unsubscribed);
+    presence.setTo(bareJid);
+    m_client->sendPacket(presence);
+}
+
+void MainWindow::actionAllowSubsribe()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    QXmppPresence presence(QXmppPresence::Subscribed);
     presence.setTo(bareJid);
     m_client->sendPacket(presence);
 }
@@ -644,6 +654,7 @@ void MainWindow::rosterContextMenu(const QPoint &position)
                     break;
                 case QXmppRoster::QXmppRosterEntry::To:
                     subMenu->addAction(ui.actionUnsubscribe);
+                    subMenu->addAction(ui.actionAllowSubcribe);
                     break;
                 case QXmppRoster::QXmppRosterEntry::From:
                     subMenu->addAction(ui.actionSubscribe);
