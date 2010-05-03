@@ -28,7 +28,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     m_client(new XmppClient(this)),
-    m_rosterModel(new RosterModel(this)),
+    m_rosterModel(new RosterModel(m_client, this)),
     m_rosterTreeView(new QTreeView(this)),
     m_unreadMessageModel(new UnreadMessageModel(this)),
     m_unreadMessageWindow(0),
@@ -62,8 +62,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui.stackedWidget->addWidget(m_loginWidget);
     ui.stackedWidget->addWidget(m_rosterTreeView);
-
-    m_rosterModel->setClient(m_client);
 
     changeToLogin();
     //setCentralWidget(m_loginWidget);
