@@ -284,13 +284,9 @@ void MainWindow::actionAddContact()
     }
 
     if (m_addContactDialog->exec()) {
-        QXmppRosterIq iq;
-        iq.setType(QXmppIq::Set);
-        QXmppRosterIq::Item item;
-        item.setBareJid(m_addContactDialog->jid());
-        item.setSubscriptionType(m_addContactDialog->subscriptionType());
-        iq.addItem(item);
-        m_client->sendPacket(iq);
+        QXmppPresence presence(QXmppPresence::Subscribe);
+        presence.setTo(m_addContactDialog->jid());
+        m_client->sendPacket(presence);
     }
 }
 
