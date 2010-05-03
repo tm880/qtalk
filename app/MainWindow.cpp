@@ -108,6 +108,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(actionAddContact()) );
     connect(ui.actionQuit, SIGNAL(triggered()),
             this, SLOT(quit()) );
+    connect(ui.actionRemoveContact, SIGNAL(triggered()),
+            this, SLOT(actionRemoveContact()) );
 
 
     // VCard
@@ -286,6 +288,18 @@ void MainWindow::actionAddContact()
         presence.setTo(m_addContactDialog->jid());
         m_client->sendPacket(presence);
     }
+}
+
+void MainWindow::actionRemoveContact()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    QXmppRosterIq::Item item;
+    item.setBareJid(bareJid);
+    item.setSubscriptionType(QXmppRosterIq::Item::Remove);
+    QXmppRosterIq iq;
+    iq.setType(QXmppIq::Set);
+    iq.addItem(item);
+    m_client->sendPacket(iq);
 }
 
 void MainWindow::openContactInfoDialog(QString jid)
@@ -586,9 +600,13 @@ void MainWindow::rosterContextMenu(const QPoint &position)
     QList<QAction *> actions;
     QModelIndex index = m_rosterTreeView->indexAt(position);
     if (index.isValid()) {
-        if (m_rosterModel->itemTypeAt(index) != RosterModel::group) {
+        RosterModel::ItemType type = m_rosterModel->itemTypeAt(index);
+        if (type != RosterModel::group) {
             actions << m_actionStartChat;
             actions << m_actionContactInfo;
+            if (type == RosterModel::contact) {
+                actions << ui.actionRemoveContact;
+            }
         }
     }
     if (!actions.isEmpty())
