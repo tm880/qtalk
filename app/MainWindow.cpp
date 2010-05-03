@@ -287,13 +287,17 @@ void MainWindow::actionAddContact()
 void MainWindow::actionRemoveContact()
 {
     QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
-    QXmppRosterIq::Item item;
-    item.setBareJid(bareJid);
-    item.setSubscriptionType(QXmppRosterIq::Item::Remove);
-    QXmppRosterIq iq;
-    iq.setType(QXmppIq::Set);
-    iq.addItem(item);
-    m_client->sendPacket(iq);
+    if (QMessageBox::warning(this, QString(tr("Remove Contact")),
+                         QString(tr("Are you sure to remove contact: %1 ?")).arg(bareJid),
+                         QMessageBox::Yes | QMessageBox::Cancel) == QMessageBox::Yes) {
+        QXmppRosterIq::Item item;
+        item.setBareJid(bareJid);
+        item.setSubscriptionType(QXmppRosterIq::Item::Remove);
+        QXmppRosterIq iq;
+        iq.setType(QXmppIq::Set);
+        iq.addItem(item);
+        m_client->sendPacket(iq);
+    }
 }
 
 void MainWindow::openContactInfoDialog(QString jid)
