@@ -595,20 +595,21 @@ void MainWindow::receivedTransferJob(QXmppTransferJob *offer)
 
 void MainWindow::rosterContextMenu(const QPoint &position)
 {
-    QList<QAction *> actions;
     QModelIndex index = m_rosterTreeView->indexAt(position);
     if (index.isValid()) {
+        QMenu menu;
         RosterModel::ItemType type = m_rosterModel->itemTypeAt(index);
         if (type != RosterModel::group) {
-            actions << ui.actionStartChat;
-            actions << ui.actionContactInfo;
+            menu.addAction(ui.actionStartChat);
+            menu.addAction(ui.actionContactInfo);
             if (type == RosterModel::contact) {
-                actions << ui.actionRemoveContact;
+                menu.addSeparator();
+                QMenu *subMenu = menu.addMenu("Roster");
+                subMenu->addAction(ui.actionRemoveContact);
             }
+            menu.exec(m_rosterTreeView->mapToGlobal(position));
         }
     }
-    if (!actions.isEmpty())
-        QMenu::exec(actions, m_rosterTreeView->mapToGlobal(position));
 }
 
 void MainWindow::initTransferWindow()
