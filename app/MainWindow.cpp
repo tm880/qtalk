@@ -286,6 +286,13 @@ void MainWindow::actionAddContact()
     }
 
     if (m_addContactDialog->exec()) {
+        QXmppRosterIq::Item item;
+        item.setBareJid(m_addContactDialog->jid());
+        QXmppRosterIq iq;
+        iq.setType(QXmppIq::Set);
+        iq.addItem(item);
+        m_client->sendPacket(iq);
+
         QXmppPresence presence(QXmppPresence::Subscribe);
         presence.setTo(m_addContactDialog->jid());
         m_client->sendPacket(presence);
@@ -562,6 +569,11 @@ void MainWindow::logout()
 {
     m_client->disconnect();
     m_rosterModel->clear();
+    foreach (ChatWindow *window, m_chatWindows) {
+        if (window != NULL)
+            window->close();
+    }
+    m_chatWindows.clear();
 }
 
 void MainWindow::quit()
