@@ -51,15 +51,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_rosterTreeView->setAlternatingRowColors(true);
     m_rosterTreeView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    m_actionStartChat = new QAction(this);
-    m_actionStartChat->setText(QString(tr("Open Chat Window")));
-    connect(m_actionStartChat, SIGNAL(triggered()),
-            this, SLOT(actionStartChat()) );
-    m_actionContactInfo = new QAction(this);
-    m_actionContactInfo->setText(QString(tr("Contact Info")));
-    connect(m_actionContactInfo, SIGNAL(triggered()),
-            this, SLOT(actionContactInfo()) );
-
     ui.stackedWidget->addWidget(m_loginWidget);
     ui.stackedWidget->addWidget(m_rosterTreeView);
 
@@ -110,7 +101,10 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(quit()) );
     connect(ui.actionRemoveContact, SIGNAL(triggered()),
             this, SLOT(actionRemoveContact()) );
-
+    connect(ui.actionStartChat, SIGNAL(triggered()),
+            this, SLOT(actionStartChat()) );
+    connect(ui.actionContactInfo, SIGNAL(triggered()),
+            this, SLOT(actionContactInfo()) );
 
     // VCard
     connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(const QXmppVCard&)),
@@ -602,8 +596,8 @@ void MainWindow::rosterContextMenu(const QPoint &position)
     if (index.isValid()) {
         RosterModel::ItemType type = m_rosterModel->itemTypeAt(index);
         if (type != RosterModel::group) {
-            actions << m_actionStartChat;
-            actions << m_actionContactInfo;
+            actions << ui.actionStartChat;
+            actions << ui.actionContactInfo;
             if (type == RosterModel::contact) {
                 actions << ui.actionRemoveContact;
             }
