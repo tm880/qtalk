@@ -286,9 +286,18 @@ void MainWindow::actionAddContact()
         m_addContactDialog = new AddContactDialog(this);
     }
 
+    m_addContactDialog->setGroups(m_rosterModel->getGroups());
+
     if (m_addContactDialog->exec()) {
         QXmppRosterIq::Item item;
         item.setBareJid(m_addContactDialog->jid());
+        if (!m_addContactDialog->name().isEmpty())
+            item.setName(m_addContactDialog->name());
+        if (!m_addContactDialog->group().isEmpty()) {
+            QSet<QString> groups;
+            groups << m_addContactDialog->group();
+            item.setGroups(groups);
+        }
         QXmppRosterIq iq;
         iq.setType(QXmppIq::Set);
         iq.addItem(item);
