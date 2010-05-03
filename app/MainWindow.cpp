@@ -105,6 +105,12 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(actionStartChat()) );
     connect(ui.actionContactInfo, SIGNAL(triggered()),
             this, SLOT(actionContactInfo()) );
+    connect(ui.actionSubscribe, SIGNAL(triggered()),
+            this, SLOT(actionSubscribe()) );
+    connect(ui.actionUnsubscribe, SIGNAL(triggered()),
+            this, SLOT(actionUnsubsribe()) );
+    connect(ui.actionDropSubscribe, SIGNAL(triggered()),
+            this, SLOT(actionDropSubsribe()) );
 
     // VCard
     connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(const QXmppVCard&)),
@@ -298,6 +304,30 @@ void MainWindow::actionRemoveContact()
         iq.addItem(item);
         m_client->sendPacket(iq);
     }
+}
+
+void MainWindow::actionSubscribe()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    QXmppPresence presence(QXmppPresence::Subscribe);
+    presence.setTo(bareJid);
+    m_client->sendPacket(presence);
+}
+
+void MainWindow::actionUnsubsribe()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    QXmppPresence presence(QXmppPresence::Unsubscribe);
+    presence.setTo(bareJid);
+    m_client->sendPacket(presence);
+}
+
+void MainWindow::actionDropSubsribe()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    QXmppPresence presence(QXmppPresence::Unsubscribed);
+    presence.setTo(bareJid);
+    m_client->sendPacket(presence);
 }
 
 void MainWindow::openContactInfoDialog(QString jid)
@@ -603,8 +633,29 @@ void MainWindow::rosterContextMenu(const QPoint &position)
             menu.addAction(ui.actionStartChat);
             menu.addAction(ui.actionContactInfo);
             if (type == RosterModel::contact) {
+                QString bareJid = m_rosterModel->jidAt(index);
+                QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
                 menu.addSeparator();
                 QMenu *subMenu = menu.addMenu("Roster");
+                switch (entry.subscriptionType()) {
+                case QXmppRoster::QXmppRosterEntry::Both:
+                    subMenu->addAction(ui.actionUnsubscribe);
+                    subMenu->addAction(ui.actionDropSubscribe);
+                    break;
+                case QXmppRoster::QXmppRosterEntry::To:
+                    subMenu->addAction(ui.actionUnsubscribe);
+                    break;
+                case QXmppRoster::QXmppRosterEntry::From:
+                    subMenu->addAction(ui.actionSubscribe);
+                    subMenu->addAction(ui.actionDropSubscribe);
+                    break;
+                case QXmppRoster::QXmppRosterEntry::None:
+                    subMenu->addAction(ui.actionSubscribe);
+                    break;
+                default:
+                    break;
+                }
+                subMenu->addSeparator();
                 subMenu->addAction(ui.actionRemoveContact);
             }
             menu.exec(m_rosterTreeView->mapToGlobal(position));
