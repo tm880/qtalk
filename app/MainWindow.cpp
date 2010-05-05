@@ -41,6 +41,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui.setupUi(this);
     readPreferences();
 
+    m_client->getConfiguration().setAutoAcceptSubscriptions(false);
+
     setupTrayIcon();
     ui.toolBar->setVisible(false);
 
@@ -669,8 +671,7 @@ void MainWindow::rosterContextMenu(const QPoint &position)
             if (type == RosterModel::contact) {
                 menu.addSeparator();
                 QMenu *subMenu = menu.addMenu("Roster");
-                /*
-                 * has bug: auto send subcribe presence when type is 'from', hide it.
+                // * has bug: auto send subcribe presence when type is 'from', hide it.
                 QString bareJid = m_rosterModel->jidAt(index);
                 QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
                 switch (entry.subscriptionType()) {
@@ -693,7 +694,6 @@ void MainWindow::rosterContextMenu(const QPoint &position)
                     break;
                 }
                 subMenu->addSeparator();
-                */
                 subMenu->addAction(ui.actionRemoveContact);
             }
             menu.exec(m_rosterTreeView->mapToGlobal(position));
