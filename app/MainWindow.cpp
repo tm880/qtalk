@@ -24,10 +24,12 @@
 #include <QDesktopWidget>
 #include <QXmppRosterIq.h>
 #include "AddContactDialog.h"
+#include "InfoEventStackWidget.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     m_client(new XmppClient(this)),
+    m_infoEventStackWidget(new InfoEventStackWidget(this)),
     m_rosterModel(new RosterModel(m_client, this)),
     m_rosterTreeView(new QTreeView(this)),
     m_unreadMessageModel(new UnreadMessageModel(this)),
@@ -46,6 +48,16 @@ MainWindow::MainWindow(QWidget *parent) :
     setupTrayIcon();
     ui.toolBar->setVisible(false);
 
+    QVBoxLayout *bottomLayout = new QVBoxLayout();
+    bottomLayout->addWidget(m_infoEventStackWidget);
+    bottomLayout->setMargin(0);
+    ui.bottomWrap->setLayout(bottomLayout);
+
+    connect(ui.showEventButton, SIGNAL(clicked()),
+            this, SLOT(showEventStack()) );
+
+    m_infoEventStackWidget->setHidden(true);
+
     m_rosterTreeView->setHeaderHidden(true);
     m_rosterTreeView->setAnimated(true);
     rosterIconResize();
@@ -56,6 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui.stackedWidget->addWidget(m_loginWidget);
     ui.stackedWidget->addWidget(m_rosterTreeView);
+
 
     changeToLogin();
     //setCentralWidget(m_loginWidget);
@@ -357,6 +370,14 @@ void MainWindow::actionAllowSubsribe()
     QXmppPresence presence(QXmppPresence::Subscribed);
     presence.setTo(bareJid);
     m_client->sendPacket(presence);
+}
+
+void MainWindow::showEventStack()
+{
+    if (m_infoEventStackWidget->isVisible())
+        m_infoEventStackWidget->setVisible(false);
+    else
+        m_infoEventStackWidget->setVisible(true);
 }
 
 void MainWindow::openContactInfoDialog(QString jid)
