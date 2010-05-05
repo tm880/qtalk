@@ -29,7 +29,6 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     m_client(new XmppClient(this)),
-    m_infoEventStackWidget(new InfoEventStackWidget(this)),
     m_rosterModel(new RosterModel(m_client, this)),
     m_rosterTreeView(new QTreeView(this)),
     m_unreadMessageModel(new UnreadMessageModel(this)),
@@ -48,6 +47,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setupTrayIcon();
     ui.toolBar->setVisible(false);
 
+    m_infoEventStackWidget = new InfoEventStackWidget(m_client, this);
+    m_infoEventStackWidget->addSubscribeRequest("test");
+    m_infoEventStackWidget->addSubscribeRequest("test2");
     QVBoxLayout *bottomLayout = new QVBoxLayout();
     bottomLayout->addWidget(m_infoEventStackWidget);
     bottomLayout->setMargin(0);
