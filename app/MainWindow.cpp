@@ -46,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setupTrayIcon();
     ui.toolBar->setVisible(false);
+    ui.presenceComboBox->setVisible(false);
+    ui.showInfoEventButton->setVisible(false);
 
     m_infoEventNone  = new QIcon(":/images/preferences-system-power-management.png");
     m_infoEventExist = new QIcon(":/images/ktip.png");
@@ -60,7 +62,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(showEventStack()) );
     connect(m_infoEventStackWidget, SIGNAL(countChanged(int)),
             this, SLOT(infoEventCountChanged(int)) );
-    //m_infoEventStackWidget->addSubscribeRequest("test");
+    connect(ui.presenceComboBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(presenceComboxChange(int)) );
     //m_infoEventStackWidget->addSubscribeRequest("test2");
 
     m_infoEventStackWidget->setVisible(false);
@@ -90,8 +93,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // xmpp client
     connect(m_client, SIGNAL(connected()),
             this, SLOT(clientConnected()));
-    connect(m_client, SIGNAL(disconnected()),
-            this, SLOT(clientDisconnect()));
+    //connect(m_client, SIGNAL(disconnected()),
+    //        this, SLOT(clientDisconnect()));
     connect(m_client, SIGNAL(error(QXmppClient::Error)),
             this, SLOT(clientError(QXmppClient::Error)));
     connect(m_client, SIGNAL(messageReceived(QXmppMessage)),
@@ -584,8 +587,8 @@ void MainWindow::changeToLogin()
     ui.toolBar->setVisible(false);
     m_loginWidget->unlock();
     ui.stackedWidget->setCurrentIndex(0);
-    ui.presenceComboBox->setEnabled(false);
-    ui.showInfoEventButton->setEnabled(false);
+    ui.presenceComboBox->setVisible(false);
+    ui.showInfoEventButton->setVisible(false);
 }
 
 void MainWindow::changeToRoster()
@@ -593,8 +596,8 @@ void MainWindow::changeToRoster()
     ui.toolBar->setVisible(true);
     ui.stackedWidget->setCurrentIndex(1);
     m_rosterTreeView->expandToDepth(0);
-    ui.presenceComboBox->setEnabled(true);
-    ui.showInfoEventButton->setEnabled(true);
+    ui.presenceComboBox->setVisible(true);
+    ui.showInfoEventButton->setVisible(true);
 }
 
 void MainWindow::setRosterIconSize(int num)
@@ -765,5 +768,43 @@ void MainWindow::infoEventCountChanged(int count)
     } else {
         ui.showInfoEventButton->setText(QString("%1").arg(count));
         ui.showInfoEventButton->setIcon(*m_infoEventExist);
+    }
+}
+
+void MainWindow::presenceComboxChange(int index)
+{
+    switch (index) {
+    case 0:
+        m_client->setClientPresence(QXmppPresence::Status::Online);
+        break;
+    case 1:
+        m_client->setClientPresence(QXmppPresence::Status::Chat);
+        break;
+    case 2:
+        m_client->setClientPresence(QXmppPresence::Status::Away);
+        break;
+    case 3:
+        m_client->setClientPresence(QXmppPresence::Status::XA);
+        break;
+    case 4:
+        m_client->setClientPresence(QXmppPresence::Status::DND);
+        break;
+    case 5:
+        m_client->setClientPresence(QXmppPresence::Status::Invisible);
+        break;
+    case 6:
+        m_client->setClientPresence(QXmppPresence::Status::Offline);
+        break;
+    }
+
+    if (index != 6
+        && m_client->getClientPresence().getType() == QXmppPresence::Unavailable) {
+        m_client->connectToServer(m_preferences.host, m_preferences.jid,
+                                  m_preferences.password, m_preferences.port);
+    }
+
+    if (index == 6) {
+        m_client->setClientPresence(QXmppPresence::Unavailable);
+        m_rosterModel->clear();
     }
 }
