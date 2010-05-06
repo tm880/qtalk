@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui.showEventButton, SIGNAL(clicked()),
             this, SLOT(showEventStack()) );
 
-    m_infoEventStackWidget->setHidden(true);
+    m_infoEventStackWidget->setVisible(false);
 
     m_rosterTreeView->setHeaderHidden(true);
     m_rosterTreeView->setAnimated(true);
@@ -377,9 +377,9 @@ void MainWindow::actionAllowSubsribe()
 void MainWindow::showEventStack()
 {
     if (m_infoEventStackWidget->isVisible())
-        m_infoEventStackWidget->setVisible(false);
+        m_infoEventStackWidget->setAnimeVisible(false);
     else
-        m_infoEventStackWidget->setVisible(true);
+        m_infoEventStackWidget->setAnimeVisible(true);
 }
 
 void MainWindow::openContactInfoDialog(QString jid)
