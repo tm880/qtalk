@@ -56,12 +56,12 @@ MainWindow::MainWindow(QWidget *parent) :
     bottomLayout->setMargin(0);
     ui.bottomWrap->setLayout(bottomLayout);
 
-    connect(ui.showEventButton, SIGNAL(clicked()),
+    connect(ui.showInfoEventButton, SIGNAL(clicked()),
             this, SLOT(showEventStack()) );
     connect(m_infoEventStackWidget, SIGNAL(countChanged(int)),
             this, SLOT(infoEventCountChanged(int)) );
-    m_infoEventStackWidget->addSubscribeRequest("test");
-    m_infoEventStackWidget->addSubscribeRequest("test2");
+    //m_infoEventStackWidget->addSubscribeRequest("test");
+    //m_infoEventStackWidget->addSubscribeRequest("test2");
 
     m_infoEventStackWidget->setVisible(false);
 
@@ -584,6 +584,8 @@ void MainWindow::changeToLogin()
     ui.toolBar->setVisible(false);
     m_loginWidget->unlock();
     ui.stackedWidget->setCurrentIndex(0);
+    ui.presenceComboBox->setEnabled(false);
+    ui.showInfoEventButton->setEnabled(false);
 }
 
 void MainWindow::changeToRoster()
@@ -591,6 +593,8 @@ void MainWindow::changeToRoster()
     ui.toolBar->setVisible(true);
     ui.stackedWidget->setCurrentIndex(1);
     m_rosterTreeView->expandToDepth(0);
+    ui.presenceComboBox->setEnabled(true);
+    ui.showInfoEventButton->setEnabled(true);
 }
 
 void MainWindow::setRosterIconSize(int num)
@@ -756,10 +760,10 @@ void MainWindow::initTransferWindow()
 void MainWindow::infoEventCountChanged(int count)
 {
     if (count == 0) {
-        ui.showEventButton->setText("");
-        ui.showEventButton->setIcon(*m_infoEventNone);
+        ui.showInfoEventButton->setText("");
+        ui.showInfoEventButton->setIcon(*m_infoEventNone);
     } else {
-        ui.showEventButton->setText(QString("%1").arg(count));
-        ui.showEventButton->setIcon(*m_infoEventExist);
+        ui.showInfoEventButton->setText(QString("%1").arg(count));
+        ui.showInfoEventButton->setIcon(*m_infoEventExist);
     }
 }
