@@ -405,7 +405,7 @@ void MainWindow::openContactInfoDialog(QString jid)
     QString bareJid = jidToBareJid(jid);
     ContactInfoDialog *dialog;
     if (m_contactInfoDialogs[bareJid] == NULL) {
-        dialog = new ContactInfoDialog(this);
+        dialog = new ContactInfoDialog();
         m_contactInfoDialogs[bareJid] = dialog;
         QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
         dialog->setData(entry.name(), jid, m_rosterModel->getVCard(bareJid));
