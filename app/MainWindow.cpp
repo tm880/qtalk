@@ -96,6 +96,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(clientError(QXmppClient::Error)));
     connect(m_client, SIGNAL(messageReceived(QXmppMessage)),
             this, SLOT(messageReceived(QXmppMessage)) );
+    connect(m_client, SIGNAL(presenceReceived(QXmppPresence)),
+            this, SLOT(presenceReceived(QXmppPresence)) );
 
     // roster model and view
     connect(m_rosterModel, SIGNAL(parseDone()),
@@ -215,6 +217,17 @@ void MainWindow::messageReceived(const QXmppMessage& message)
 
             changeTrayIcon(newMessage);
         }
+    }
+}
+
+void MainWindow::presenceReceived(const QXmppPresence &presence)
+{
+    switch (presence.getType()) {
+    case QXmppPresence::Subscribe:
+        m_infoEventStackWidget->addSubscribeRequest(presence.from());
+        break;
+    default:
+        break;
     }
 }
 
