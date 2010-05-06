@@ -45,7 +45,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_client->getConfiguration().setAutoAcceptSubscriptions(false);
 
     setupTrayIcon();
-    ui.toolBar->setVisible(false);
     ui.presenceComboBox->setVisible(false);
     ui.showInfoEventButton->setVisible(false);
 
@@ -583,7 +582,6 @@ void MainWindow::hideOffline(bool hide)
 
 void MainWindow::changeToLogin()
 {
-    ui.toolBar->setVisible(false);
     m_loginWidget->unlock();
     ui.stackedWidget->setCurrentIndex(0);
     ui.presenceComboBox->setVisible(false);
@@ -592,7 +590,6 @@ void MainWindow::changeToLogin()
 
 void MainWindow::changeToRoster()
 {
-    ui.toolBar->setVisible(true);
     ui.stackedWidget->setCurrentIndex(1);
     m_rosterTreeView->expandToDepth(0);
     ui.presenceComboBox->setVisible(true);
