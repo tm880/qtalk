@@ -194,6 +194,8 @@ void MainWindow::login()
     m_loginWidget->writeData(&m_preferences);
     m_loginWidget->showState("Login ...");
     //m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
+
+    ui.presenceComboBox->setCurrentIndex(0);
     m_client->connectToServer(m_preferences.host, m_preferences.jid,
                               m_preferences.password, m_preferences.port);
 }
@@ -529,8 +531,13 @@ void MainWindow::readAllUnreadMessage()
 
 void MainWindow::clientDisconnect()
 {
-    m_loginWidget->showState("Disconnect");
-    changeToLogin();
+    m_rosterModel->clear();
+    foreach (ChatWindow *window, m_chatWindows) {
+        if (window != NULL)
+            window->close();
+    }
+    m_chatWindows.clear();
+    m_client->disconnect();
 }
 
 void MainWindow::clientError(QXmppClient::Error)
@@ -629,13 +636,8 @@ void MainWindow::vCardReveived(const QXmppVCard &vCard)
 
 void MainWindow::logout()
 {
-    m_client->disconnect();
-    m_rosterModel->clear();
-    foreach (ChatWindow *window, m_chatWindows) {
-        if (window != NULL)
-            window->close();
-    }
-    m_chatWindows.clear();
+    clientDisconnect();
+    changeToLogin();
 }
 
 void MainWindow::quit()
@@ -794,17 +796,16 @@ void MainWindow::presenceComboxChange(int index)
         break;
     case 6:
         m_client->setClientPresence(QXmppPresence::Status::Offline);
+        clientDisconnect();
         break;
     }
 
     if (index != 6
         && m_client->getClientPresence().getType() == QXmppPresence::Unavailable) {
+        m_client->setClientPresence(QXmppPresence::Available);
         m_client->connectToServer(m_preferences.host, m_preferences.jid,
-                                  m_preferences.password, m_preferences.port);
+                                  m_preferences.password, m_preferences.port,
+                                  m_client->getClientPresence());
     }
 
-    if (index == 6) {
-        m_client->setClientPresence(QXmppPresence::Unavailable);
-        m_rosterModel->clear();
-    }
 }
