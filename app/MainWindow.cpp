@@ -93,8 +93,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // xmpp client
     connect(m_client, SIGNAL(connected()),
             this, SLOT(clientConnected()));
-    //connect(m_client, SIGNAL(disconnected()),
-    //        this, SLOT(clientDisconnect()));
+    connect(m_client, SIGNAL(disconnected()),
+            this, SLOT(clientDisconnected()) );
     connect(m_client, SIGNAL(error(QXmppClient::Error)),
             this, SLOT(clientError(QXmppClient::Error)));
     connect(m_client, SIGNAL(messageReceived(QXmppMessage)),
@@ -200,9 +200,15 @@ void MainWindow::login()
                               m_preferences.password, m_preferences.port);
 }
 
+void MainWindow::clientDisconnected()
+{
+    updateTrayIcon();
+}
+
 void MainWindow::clientConnected()
 {
     m_loginWidget->showState("Connect successful");
+    updateTrayIcon();
 }
 
 void MainWindow::messageReceived(const QXmppMessage& message)
@@ -220,7 +226,7 @@ void MainWindow::messageReceived(const QXmppMessage& message)
             m_unreadMessageModel->add(message);
             m_rosterModel->messageUnread(bareJid, resource);
 
-            changeTrayIcon(newMessage);
+            updateTrayIcon();
         }
     }
 }
@@ -472,7 +478,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::setupTrayIcon()
 {
     m_trayIcon = new QSystemTrayIcon(this);
-    changeTrayIcon(online);
+    m_trayIcon->setIcon(QIcon(":/images/im-user-offline.png"));
 
     //m_quitAction = new QAction(tr("&Quit"), this);
     //connect(m_quitAction, SIGNAL(triggered()), this, SLOT(quit()));
@@ -502,23 +508,9 @@ void MainWindow::createUnreadMessageWindow()
             this, SLOT(readAllUnreadMessage()));
 }
 
-void MainWindow::changeTrayIcon(TrayIconType type)
-{
-    switch (type){
-        case online:
-            m_trayIcon->setIcon(QIcon(":/images/im-user.png"));
-            break;
-        case newMessage:
-            m_trayIcon->setIcon(QIcon(":/images/mail-unread-new.png"));
-            break;
-        default:
-            break;
-    }
-}
-
 void MainWindow::unreadMessageCleared()
 {
-    changeTrayIcon(online);
+    updateTrayIcon();
 }
 
 void MainWindow::readAllUnreadMessage()
@@ -807,5 +799,34 @@ void MainWindow::presenceComboxChange(int index)
                                   m_preferences.password, m_preferences.port,
                                   m_client->getClientPresence());
     }
+    updateTrayIcon();
+}
 
+void MainWindow::updateTrayIcon()
+{
+    if (m_unreadMessageModel->hasAnyUnread()) {
+        m_trayIcon->setIcon(QIcon(":/images/mail-unread-new.png"));
+        return;
+    }
+
+    if (m_client->getClientPresence().getType() == QXmppPresence::Available) {
+        switch (m_client->getClientPresence().getStatus().getType()) {
+        case QXmppPresence::Status::Away:
+        case QXmppPresence::Status::XA:
+            m_trayIcon->setIcon(QIcon(":/images/im-user-away.png"));
+            return;
+        case QXmppPresence::Status::DND:
+            m_trayIcon->setIcon(QIcon(":/images/im-user-busy.png"));
+            return;
+        case QXmppPresence::Status::Invisible:
+            m_trayIcon->setIcon(QIcon(":/images/im-invisible-user.png"));
+            return;
+        default:
+            m_trayIcon->setIcon(QIcon(":/images/im-user.png"));
+            return;
+        }
+    }
+
+    if (m_client->getClientPresence().getType() == QXmppPresence::Unavailable)
+        m_trayIcon->setIcon(QIcon(":/images/im-user-offline.png"));
 }
