@@ -47,9 +47,10 @@ MainWindow::MainWindow(QWidget *parent) :
     setupTrayIcon();
     ui.toolBar->setVisible(false);
 
+    m_infoEventNone  = new QIcon(":/images/preferences-system-power-management.png");
+    m_infoEventExist = new QIcon(":/images/ktip.png");
+
     m_infoEventStackWidget = new InfoEventStackWidget(m_client, this);
-    m_infoEventStackWidget->addSubscribeRequest("test");
-    m_infoEventStackWidget->addSubscribeRequest("test2");
     QVBoxLayout *bottomLayout = new QVBoxLayout();
     bottomLayout->addWidget(m_infoEventStackWidget);
     bottomLayout->setMargin(0);
@@ -57,6 +58,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui.showEventButton, SIGNAL(clicked()),
             this, SLOT(showEventStack()) );
+    connect(m_infoEventStackWidget, SIGNAL(countChanged(int)),
+            this, SLOT(infoEventCountChanged(int)) );
+    m_infoEventStackWidget->addSubscribeRequest("test");
+    m_infoEventStackWidget->addSubscribeRequest("test2");
 
     m_infoEventStackWidget->setVisible(false);
 
@@ -732,5 +737,16 @@ void MainWindow::initTransferWindow()
         connect(&m_client->getTransferManager(), SIGNAL(finished(QXmppTransferJob*)),
                 m_transferManagerWindow, SLOT(deleteFileHandel(QXmppTransferJob*)) );
 
+    }
+}
+
+void MainWindow::infoEventCountChanged(int count)
+{
+    if (count == 0) {
+        ui.showEventButton->setText("");
+        ui.showEventButton->setIcon(*m_infoEventNone);
+    } else {
+        ui.showEventButton->setText(QString("%1").arg(count));
+        ui.showEventButton->setIcon(*m_infoEventExist);
     }
 }
