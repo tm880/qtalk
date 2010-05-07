@@ -67,6 +67,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //m_infoEventStackWidget->addSubscribeRequest("test2");
 
     m_infoEventStackWidget->setVisible(false);
+    connect(m_infoEventStackWidget, SIGNAL(infoEventCleared()),
+            this, SLOT(updateTrayIcon()) );
 
     m_rosterTreeView->setHeaderHidden(true);
     m_rosterTreeView->setAnimated(true);
@@ -242,6 +244,8 @@ void MainWindow::presenceReceived(const QXmppPresence &presence)
     switch (presence.getType()) {
     case QXmppPresence::Subscribe:
         m_infoEventStackWidget->addSubscribeRequest(presence.from());
+        m_trayIcon->showMessage(QString(tr("Request")), QString(tr("%1 want to subscribe you")).arg(presence.from()));
+        updateTrayIcon();
         break;
     default:
         break;
@@ -925,6 +929,11 @@ void MainWindow::updateTrayIcon()
 {
     if (m_unreadMessageModel->hasAnyUnread()) {
         m_trayIcon->setIcon(QIcon(":/images/mail-unread-new.png"));
+        return;
+    }
+
+    if (!m_infoEventStackWidget->isEmpty()) {
+        m_trayIcon->setIcon(QIcon(":/images/ktip.png"));
         return;
     }
 
