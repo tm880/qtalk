@@ -906,16 +906,18 @@ void MainWindow::presenceComboxChange(int index)
     case 4:
         m_client->setClientPresence(QXmppPresence::Status::DND);
         break;
+        /* invisible is no in xmpp core
     case 5:
         m_client->setClientPresence(QXmppPresence::Status::Invisible);
         break;
-    case 6:
+        */
+    case 5:
         m_client->setClientPresence(QXmppPresence::Status::Offline);
         clientDisconnect();
         break;
     }
 
-    if (index != 6
+    if (index != 5
         && m_client->getClientPresence().getType() == QXmppPresence::Unavailable) {
         m_client->setClientPresence(QXmppPresence::Available);
         m_client->connectToServer(m_preferences.host, m_preferences.jid,
@@ -946,9 +948,11 @@ void MainWindow::updateTrayIcon()
         case QXmppPresence::Status::DND:
             m_trayIcon->setIcon(QIcon(":/images/im-user-busy.png"));
             return;
+            /*
         case QXmppPresence::Status::Invisible:
             m_trayIcon->setIcon(QIcon(":/images/im-invisible-user.png"));
             return;
+            */
         default:
             m_trayIcon->setIcon(QIcon(":/images/im-user.png"));
             return;
