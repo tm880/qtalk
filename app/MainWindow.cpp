@@ -25,6 +25,7 @@
 #include <QXmppRosterIq.h>
 #include "AddContactDialog.h"
 #include "InfoEventStackWidget.h"
+#include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -140,6 +141,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(actionDropSubsribe()) );
     connect(ui.actionAllowSubcribe, SIGNAL(triggered()),
             this, SLOT(actionAllowSubsribe()) );
+    connect(ui.actionEditName, SIGNAL(triggered()),
+            this, SLOT(actionEditName()) );
 
     // VCard
     connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(const QXmppVCard&)),
@@ -400,6 +403,23 @@ void MainWindow::actionAllowSubsribe()
     QXmppPresence presence(QXmppPresence::Subscribed);
     presence.setTo(bareJid);
     m_client->sendPacket(presence);
+}
+
+void MainWindow::actionEditName()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
+    bool ok;
+    QString name = QInputDialog::getText(this, QString(tr("Edit Name For: %1")).arg(bareJid),
+                                         QString(tr("New Name")), QLineEdit::Normal,
+                                         entry.name(), &ok);
+    if (ok && !name.isEmpty()) {
+        QXmppRosterIq iq;
+        iq.setType(QXmppRosterIq::Set);
+        entry.setName(name);
+        iq.addItem(entry);
+        m_client->sendPacket(iq);
+    }
 }
 
 void MainWindow::showEventStack()
@@ -706,6 +726,7 @@ void MainWindow::rosterContextMenu(const QPoint &position)
         RosterModel::ItemType type = m_rosterModel->itemTypeAt(index);
         if (type != RosterModel::group) {
             menu.addAction(ui.actionStartChat);
+            menu.addAction(ui.actionEditName);
             menu.addAction(ui.actionContactInfo);
             if (type == RosterModel::contact) {
                 menu.addSeparator();
