@@ -580,13 +580,33 @@ void MainWindow::setupTrayIcon()
     m_trayIcon = new QSystemTrayIcon(this);
     m_trayIcon->setIcon(QIcon(":/images/im-user-offline.png"));
 
-    //m_quitAction = new QAction(tr("&Quit"), this);
-    //connect(m_quitAction, SIGNAL(triggered()), this, SLOT(quit()));
-
     m_trayIconMenu = new QMenu(this);
-    //m_trayIconMenu->addAction(m_quitAction);
+
+    // Status change
+    QAction *onlineAction = m_trayIconMenu->addAction(QIcon(":/images/im-user.png"), QString(tr("Online")));
+    connect(onlineAction, SIGNAL(triggered()),
+            this, SLOT(setPresenceOnline()) );
+    QAction *chatAction = m_trayIconMenu->addAction(QIcon(":/images/im-user.png"), QString(tr("Chat")));
+    connect(chatAction, SIGNAL(triggered()),
+            this, SLOT(setPresenceChat()) );
+    QAction *awayAction = m_trayIconMenu->addAction(QIcon(":/images/im-user-away.png"), QString(tr("Away")));
+    connect(awayAction, SIGNAL(triggered()),
+            this, SLOT(setPresenceAway()) );
+    QAction *xaAction = m_trayIconMenu->addAction(QIcon(":/images/im-user-away.png"), QString(tr("Extened Away")));
+    connect(xaAction, SIGNAL(triggered()),
+            this, SLOT(setPresenceXa()) );
+    QAction *busyAction = m_trayIconMenu->addAction(QIcon(":/images/im-user-busy.png"), QString(tr("Do Not Disturb")));
+    connect(busyAction, SIGNAL(triggered()),
+            this, SLOT(setPresenceDnd()) );
+    QAction *offlineAction = m_trayIconMenu->addAction(QIcon(":/images/im-user-offline.png"), QString(tr("Offline")));
+    connect(offlineAction, SIGNAL(triggered()),
+            this, SLOT(setPresenceOffline()) );
+
+    m_trayIconMenu->addSeparator();
     m_trayIconMenu->addAction(ui.actionTransferManager);
     m_trayIconMenu->addAction(ui.actionPreferences);
+
+    m_trayIconMenu->addSeparator();
     m_trayIconMenu->addAction(ui.actionQuit);
     m_trayIcon->setContextMenu(m_trayIconMenu);
 
@@ -915,7 +935,6 @@ void MainWindow::presenceComboxChange(int index)
         setPresenceOffline();
         break;
     }
-    updateTrayIcon();
 }
 
 void MainWindow::setPresenceOnline()
@@ -923,55 +942,75 @@ void MainWindow::setPresenceOnline()
     if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::Online
         && m_client->getClientPresence().getType() == QXmppPresence::Available)
         return;
+
+    if (ui.presenceComboBox->currentIndex() != 0)
+        ui.presenceComboBox->setCurrentIndex(0);
     QXmppPresence presence = m_client->getClientPresence();
     presence.getStatus().setType(QXmppPresence::Status::Online);
     presence.getStatus().setStatusText(QString());
     m_client->setClientPresence(presence);
     reConnect();
+    updateTrayIcon();
 }
 
 void MainWindow::setPresenceChat()
 {
     if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::Chat)
         return;
+
+    if (ui.presenceComboBox->currentIndex() != 1)
+        ui.presenceComboBox->setCurrentIndex(1);
     QXmppPresence presence = m_client->getClientPresence();
     presence.getStatus().setType(QXmppPresence::Status::Chat);
     presence.getStatus().setStatusText(QString());
     m_client->setClientPresence(presence);
     reConnect();
+    updateTrayIcon();
 }
 
 void MainWindow::setPresenceAway()
 {
     if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::Away)
         return;
+
+    if (ui.presenceComboBox->currentIndex() != 2)
+        ui.presenceComboBox->setCurrentIndex(2);
     QXmppPresence presence = m_client->getClientPresence();
     presence.getStatus().setType(QXmppPresence::Status::Away);
     presence.getStatus().setStatusText(QString());
     m_client->setClientPresence(presence);
     reConnect();
+    updateTrayIcon();
 }
 
 void MainWindow::setPresenceXa()
 {
     if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::XA)
         return;
+
+    if (ui.presenceComboBox->currentIndex() != 3)
+        ui.presenceComboBox->setCurrentIndex(3);
     QXmppPresence presence = m_client->getClientPresence();
     presence.getStatus().setType(QXmppPresence::Status::XA);
     presence.getStatus().setStatusText(QString());
     m_client->setClientPresence(presence);
     reConnect();
+    updateTrayIcon();
 }
 
 void MainWindow::setPresenceDnd()
 {
     if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::DND)
         return;
+
+    if (ui.presenceComboBox->currentIndex() != 4)
+        ui.presenceComboBox->setCurrentIndex(4);
     QXmppPresence presence = m_client->getClientPresence();
     presence.getStatus().setType(QXmppPresence::Status::DND);
     presence.getStatus().setStatusText(QString());
     m_client->setClientPresence(presence);
     reConnect();
+    updateTrayIcon();
 }
 
 void MainWindow::reConnect()
@@ -988,11 +1027,15 @@ void MainWindow::setPresenceOffline()
 {
     if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::Offline)
         return;
+
+    if (ui.presenceComboBox->currentIndex() != 5)
+        ui.presenceComboBox->setCurrentIndex(5);
     QXmppPresence presence = m_client->getClientPresence();
     presence.getStatus().setType(QXmppPresence::Status::Offline);
     presence.getStatus().setStatusText(QString());
     m_client->setClientPresence(presence);
     clientDisconnect();
+    updateTrayIcon();
 }
 
 
