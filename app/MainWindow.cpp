@@ -143,6 +143,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(actionAllowSubsribe()) );
     connect(ui.actionEditName, SIGNAL(triggered()),
             this, SLOT(actionEditName()) );
+    connect(ui.actionMoveToNewGroup, SIGNAL(triggered()),
+            this, SLOT(actionMoveToNewGroup()) );
 
     // VCard
     connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(const QXmppVCard&)),
@@ -417,6 +419,44 @@ void MainWindow::actionEditName()
         QXmppRosterIq iq;
         iq.setType(QXmppRosterIq::Set);
         entry.setName(name);
+        iq.addItem(entry);
+        m_client->sendPacket(iq);
+    }
+}
+
+void MainWindow::actionMoveToNewGroup()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    bool ok;
+    QString group = QInputDialog::getText(this, QString(tr("New Group")),
+                                         QString(tr("Group Name")), QLineEdit::Normal,
+                                         QString(), &ok);
+    if (ok && !group.isEmpty()) {
+        QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
+        QSet<QString> groups = entry.groups();
+        groups.remove(m_rosterModel->groupAt(m_rosterTreeView->currentIndex()));
+        groups.insert(group);
+        entry.setGroups(groups);
+        QXmppRosterIq iq;
+        iq.setType(QXmppIq::Set);
+        iq.addItem(entry);
+        m_client->sendPacket(iq);
+    }
+}
+
+void MainWindow::actionMoveToGroup()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    QAction *action = qobject_cast<QAction *>(sender());
+    QString group = action->text();
+    if (!bareJid.isEmpty() && !group.isEmpty()) {
+        QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
+        QSet<QString> groups = entry.groups();
+        groups.remove(m_rosterModel->groupAt(m_rosterTreeView->currentIndex()));
+        groups.insert(group);
+        entry.setGroups(groups);
+        QXmppRosterIq iq;
+        iq.setType(QXmppIq::Set);
         iq.addItem(entry);
         m_client->sendPacket(iq);
     }
@@ -726,9 +766,23 @@ void MainWindow::rosterContextMenu(const QPoint &position)
         RosterModel::ItemType type = m_rosterModel->itemTypeAt(index);
         if (type != RosterModel::group) {
             menu.addAction(ui.actionStartChat);
-            menu.addAction(ui.actionEditName);
             menu.addAction(ui.actionContactInfo);
+
             if (type == RosterModel::contact) {
+                menu.addSeparator();
+                menu.addAction(ui.actionEditName);
+                QMenu *moveMenu = menu.addMenu(QIcon(":/images/folder.png"), QString(tr("Move to")));
+                moveMenu->addAction(ui.actionMoveToNewGroup);
+                moveMenu->addSeparator();
+                QString currentGroup = m_rosterModel->groupAt(m_rosterTreeView->currentIndex());
+                QSet<QString> otherGroups = m_rosterModel->getGroups();
+                otherGroups.remove(currentGroup);
+                foreach (QString group, otherGroups) {
+                    QAction *moveAction = moveMenu->addAction(group);
+                    connect(moveAction, SIGNAL(triggered()),
+                            this, SLOT(actionMoveToGroup()) );
+                }
+
                 menu.addSeparator();
                 QMenu *subMenu = menu.addMenu("Roster");
                 // * has bug: auto send subcribe presence when type is 'from', hide it.
