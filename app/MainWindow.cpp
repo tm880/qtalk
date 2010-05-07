@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(showEventStack()) );
     connect(m_infoEventStackWidget, SIGNAL(countChanged(int)),
             this, SLOT(infoEventCountChanged(int)) );
-    connect(ui.presenceComboBox, SIGNAL(currentIndexChanged(int)),
+    connect(ui.presenceComboBox, SIGNAL(activated(int)),
             this, SLOT(presenceComboxChange(int)) );
     //m_infoEventStackWidget->addSubscribeRequest("test2");
 
@@ -892,19 +892,19 @@ void MainWindow::presenceComboxChange(int index)
 {
     switch (index) {
     case 0:
-        m_client->setClientPresence(QXmppPresence::Status::Online);
+        setPresenceOnline();
         break;
     case 1:
-        m_client->setClientPresence(QXmppPresence::Status::Chat);
+        setPresenceChat();
         break;
     case 2:
-        m_client->setClientPresence(QXmppPresence::Status::Away);
+        setPresenceAway();
         break;
     case 3:
-        m_client->setClientPresence(QXmppPresence::Status::XA);
+        setPresenceXa();
         break;
     case 4:
-        m_client->setClientPresence(QXmppPresence::Status::DND);
+        setPresenceDnd();
         break;
         /* invisible is no in xmpp core
     case 5:
@@ -912,20 +912,89 @@ void MainWindow::presenceComboxChange(int index)
         break;
         */
     case 5:
-        m_client->setClientPresence(QXmppPresence::Status::Offline);
-        clientDisconnect();
+        setPresenceOffline();
         break;
     }
+    updateTrayIcon();
+}
 
-    if (index != 5
-        && m_client->getClientPresence().getType() == QXmppPresence::Unavailable) {
+void MainWindow::setPresenceOnline()
+{
+    if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::Online
+        && m_client->getClientPresence().getType() == QXmppPresence::Available)
+        return;
+    QXmppPresence presence = m_client->getClientPresence();
+    presence.getStatus().setType(QXmppPresence::Status::Online);
+    presence.getStatus().setStatusText(QString());
+    m_client->setClientPresence(presence);
+    reConnect();
+}
+
+void MainWindow::setPresenceChat()
+{
+    if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::Chat)
+        return;
+    QXmppPresence presence = m_client->getClientPresence();
+    presence.getStatus().setType(QXmppPresence::Status::Chat);
+    presence.getStatus().setStatusText(QString());
+    m_client->setClientPresence(presence);
+    reConnect();
+}
+
+void MainWindow::setPresenceAway()
+{
+    if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::Away)
+        return;
+    QXmppPresence presence = m_client->getClientPresence();
+    presence.getStatus().setType(QXmppPresence::Status::Away);
+    presence.getStatus().setStatusText(QString());
+    m_client->setClientPresence(presence);
+    reConnect();
+}
+
+void MainWindow::setPresenceXa()
+{
+    if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::XA)
+        return;
+    QXmppPresence presence = m_client->getClientPresence();
+    presence.getStatus().setType(QXmppPresence::Status::XA);
+    presence.getStatus().setStatusText(QString());
+    m_client->setClientPresence(presence);
+    reConnect();
+}
+
+void MainWindow::setPresenceDnd()
+{
+    if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::DND)
+        return;
+    QXmppPresence presence = m_client->getClientPresence();
+    presence.getStatus().setType(QXmppPresence::Status::DND);
+    presence.getStatus().setStatusText(QString());
+    m_client->setClientPresence(presence);
+    reConnect();
+}
+
+void MainWindow::reConnect()
+{
+    if (m_client->getClientPresence().getType() != QXmppPresence::Available) {
         m_client->setClientPresence(QXmppPresence::Available);
         m_client->connectToServer(m_preferences.host, m_preferences.jid,
                                   m_preferences.password, m_preferences.port,
                                   m_client->getClientPresence());
     }
-    updateTrayIcon();
 }
+
+void MainWindow::setPresenceOffline()
+{
+    if (m_client->getClientPresence().getStatus().getType() == QXmppPresence::Status::Offline)
+        return;
+    QXmppPresence presence = m_client->getClientPresence();
+    presence.getStatus().setType(QXmppPresence::Status::Offline);
+    presence.getStatus().setStatusText(QString());
+    m_client->setClientPresence(presence);
+    clientDisconnect();
+}
+
 
 void MainWindow::updateTrayIcon()
 {
