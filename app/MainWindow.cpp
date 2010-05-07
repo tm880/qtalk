@@ -44,6 +44,9 @@ MainWindow::MainWindow(QWidget *parent) :
     readPreferences();
 
     m_client->getConfiguration().setAutoAcceptSubscriptions(false);
+    //m_client->getTransferManager().setSupportedMethods(QXmppTransferJob::InBandMethod);
+    m_client->getTransferManager().setProxy("proxy.eu.jabber.org");
+    //m_client->getTransferManager().setProxyOnly(true);
 
     setupTrayIcon();
     ui.presenceComboBox->setVisible(false);
