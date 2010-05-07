@@ -145,6 +145,8 @@ MainWindow::MainWindow(QWidget *parent) :
             this, SLOT(actionEditName()) );
     connect(ui.actionMoveToNewGroup, SIGNAL(triggered()),
             this, SLOT(actionMoveToNewGroup()) );
+    connect(ui.actionCopyToNewGroup, SIGNAL(triggered()),
+            this, SLOT(actionCopyToNewGroup()) );
 
     // VCard
     connect(&m_client->getVCardManager(), SIGNAL(vCardReceived(const QXmppVCard&)),
@@ -453,6 +455,41 @@ void MainWindow::actionMoveToGroup()
         QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
         QSet<QString> groups = entry.groups();
         groups.remove(m_rosterModel->groupAt(m_rosterTreeView->currentIndex()));
+        groups.insert(group);
+        entry.setGroups(groups);
+        QXmppRosterIq iq;
+        iq.setType(QXmppIq::Set);
+        iq.addItem(entry);
+        m_client->sendPacket(iq);
+    }
+}
+void MainWindow::actionCopyToNewGroup()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    bool ok;
+    QString group = QInputDialog::getText(this, QString(tr("New Group")),
+                                         QString(tr("Group Name")), QLineEdit::Normal,
+                                         QString(), &ok);
+    if (ok && !group.isEmpty()) {
+        QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
+        QSet<QString> groups = entry.groups();
+        groups.insert(group);
+        entry.setGroups(groups);
+        QXmppRosterIq iq;
+        iq.setType(QXmppIq::Set);
+        iq.addItem(entry);
+        m_client->sendPacket(iq);
+    }
+}
+
+void MainWindow::actionCopyToGroup()
+{
+    QString bareJid = jidToBareJid(m_rosterModel->jidAt(m_rosterTreeView->currentIndex()));
+    QAction *action = qobject_cast<QAction *>(sender());
+    QString group = action->text();
+    if (!bareJid.isEmpty() && !group.isEmpty()) {
+        QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
+        QSet<QString> groups = entry.groups();
         groups.insert(group);
         entry.setGroups(groups);
         QXmppRosterIq iq;
@@ -771,16 +808,26 @@ void MainWindow::rosterContextMenu(const QPoint &position)
             if (type == RosterModel::contact) {
                 menu.addSeparator();
                 menu.addAction(ui.actionEditName);
-                QMenu *moveMenu = menu.addMenu(QIcon(":/images/folder.png"), QString(tr("Move to")));
-                moveMenu->addAction(ui.actionMoveToNewGroup);
-                moveMenu->addSeparator();
                 QString currentGroup = m_rosterModel->groupAt(m_rosterTreeView->currentIndex());
                 QSet<QString> otherGroups = m_rosterModel->getGroups();
                 otherGroups.remove(currentGroup);
+
+                QMenu *moveMenu = menu.addMenu(QString(tr("Move to")));
+                moveMenu->addAction(ui.actionMoveToNewGroup);
+                moveMenu->addSeparator();
                 foreach (QString group, otherGroups) {
                     QAction *moveAction = moveMenu->addAction(group);
                     connect(moveAction, SIGNAL(triggered()),
                             this, SLOT(actionMoveToGroup()) );
+                }
+
+                QMenu *copyMenu = menu.addMenu(QString(tr("Copy to")));
+                copyMenu->addAction(ui.actionCopyToNewGroup);
+                copyMenu->addSeparator();
+                foreach (QString group, otherGroups) {
+                    QAction *copyAction = copyMenu->addAction(group);
+                    connect(copyAction, SIGNAL(triggered()),
+                            this, SLOT(actionCopyToGroup()) );
                 }
 
                 menu.addSeparator();
