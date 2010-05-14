@@ -1,5 +1,4 @@
 #include "MainWindow.h"
-#include "XmppClient.h"
 #include "QXmppRoster.h"
 #include "ChatWindow.h"
 #include <QCloseEvent>
@@ -30,7 +29,7 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    m_client(new XmppClient(this)),
+    m_client(new QXmppClient(this)),
     m_rosterModel(new RosterModel(m_client, this)),
     m_rosterTreeView(new QTreeView(this)),
     m_unreadMessageModel(new UnreadMessageModel(this)),
