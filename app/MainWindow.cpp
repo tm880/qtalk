@@ -565,8 +565,13 @@ void MainWindow::closeEvent(QCloseEvent *event)
         if (m_closeToTrayDialog == 0)
             m_closeToTrayDialog = new CloseNoticeDialog(this);
         m_closeToTrayDialog->readData(&m_preferences);
-        if (m_closeToTrayDialog->exec())
+
+        if (m_closeToTrayDialog->exec()) {
             m_closeToTrayDialog->writeDate(&m_preferences);
+        } else {
+            event->ignore();
+            return;
+        }
     }
 
     if (m_preferences.closeToTray) {
