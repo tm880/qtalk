@@ -26,6 +26,7 @@
 #include "AddContactDialog.h"
 #include "InfoEventStackWidget.h"
 #include <QInputDialog>
+#include <QTranslator>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -583,6 +584,18 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
+void MainWindow::changeEvent(QEvent *event)
+{
+    QMainWindow::changeEvent(event);
+    switch (event->type()) {
+    case QEvent::LanguageChange:
+        ui.retranslateUi(this);
+        break;
+    default:
+        break;
+    }
+}
+
 void MainWindow::setupTrayIcon()
 {
     m_trayIcon = new QSystemTrayIcon(this);
@@ -687,6 +700,13 @@ void MainWindow::openPreferencesDialog()
 void MainWindow::preferencesApplied()
 {
     m_preferencesDialog->writeData(&m_preferences);
+
+    if (m_preferencesDialog->isLanguageChanged()) {
+        QTranslator translator;
+        QString tsPath = QCoreApplication::applicationDirPath() + "/translations";
+        translator.load(tsPath + "/qtalk_" + m_preferences.language);
+        qApp->installTranslator(&translator);
+    }
 
     if (m_preferencesDialog->isRosterPrefChanged()) {
         ui.actionHideOffline->setChecked(m_preferences.hideOffline);
