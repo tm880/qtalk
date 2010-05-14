@@ -44,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui.setupUi(this);
     readPreferences();
 
+    retranslate();
+
     m_client->getConfiguration().setAutoAcceptSubscriptions(false);
     //m_client->getTransferManager().setSupportedMethods(QXmppTransferJob::InBandMethod);
     m_client->getTransferManager().setProxy("proxy.eu.jabber.org");
@@ -649,6 +651,17 @@ void MainWindow::createUnreadMessageWindow()
             this, SLOT(readAllUnreadMessage()));
 }
 
+void MainWindow::retranslate()
+{
+    QString tsPath = QCoreApplication::applicationDirPath() + "/translations";
+    qApp->removeTranslator(&m_translator);
+
+    if (m_preferences.language != "en") {
+        m_translator.load(tsPath + "/qtalk_" + m_preferences.language);
+        qApp->installTranslator(&m_translator);
+    }
+}
+
 void MainWindow::unreadMessageCleared()
 {
     updateTrayIcon();
@@ -699,13 +712,15 @@ void MainWindow::openPreferencesDialog()
 
 void MainWindow::preferencesApplied()
 {
+    QString language = m_preferences.language;
+    if (language.isEmpty())
+        language = "en";
+
     m_preferencesDialog->writeData(&m_preferences);
 
     if (m_preferencesDialog->isLanguageChanged()) {
-        QTranslator translator;
-        QString tsPath = QCoreApplication::applicationDirPath() + "/translations";
-        translator.load(tsPath + "/qtalk_" + m_preferences.language);
-        qApp->installTranslator(&translator);
+        retranslate();
+
     }
 
     if (m_preferencesDialog->isRosterPrefChanged()) {
