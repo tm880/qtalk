@@ -205,7 +205,7 @@ void MainWindow::login()
 {
     m_loginWidget->lock();
     m_loginWidget->writeData(&m_preferences);
-    m_loginWidget->showState("Login ...");
+    m_loginWidget->showState(tr("Login ..."));
     //m_client->connectToServer("talk.google.com", "chloerei", "1110chloerei", "gmail.com");
 
     ui.presenceComboBox->setCurrentIndex(0);
@@ -220,7 +220,7 @@ void MainWindow::clientDisconnected()
 
 void MainWindow::clientConnected()
 {
-    m_loginWidget->showState("Connect successful");
+    m_loginWidget->showState(tr("Connect successful"));
     updateTrayIcon();
 }
 
@@ -687,7 +687,7 @@ void MainWindow::clientDisconnect()
 
 void MainWindow::clientError(QXmppClient::Error)
 {
-    m_loginWidget->showState("Connect Error");
+    m_loginWidget->showState(tr("Connect Error"));
     changeToLogin();
 }
 
@@ -897,7 +897,7 @@ void MainWindow::rosterContextMenu(const QPoint &position)
                 }
 
                 menu.addSeparator();
-                QMenu *subMenu = menu.addMenu("Roster");
+                QMenu *subMenu = menu.addMenu(tr("Roster"));
                 // * has bug: auto send subcribe presence when type is 'from', hide it.
                 QString bareJid = m_rosterModel->jidAt(index);
                 QXmppRoster::QXmppRosterEntry entry = m_client->getRoster().getRosterEntry(bareJid);
