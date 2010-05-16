@@ -52,6 +52,7 @@
 #include "InfoEventStackWidget.h"
 #include <QInputDialog>
 #include <QTranslator>
+#include <QXmppLogger.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -70,6 +71,8 @@ MainWindow::MainWindow(QWidget *parent) :
     readPreferences();
 
     retranslate();
+
+    QXmppLogger::getLogger()->setLoggingType(QXmppLogger::STDOUT);
 
     m_client->getConfiguration().setAutoAcceptSubscriptions(false);
     //m_client->getTransferManager().setSupportedMethods(QXmppTransferJob::InBandMethod);
